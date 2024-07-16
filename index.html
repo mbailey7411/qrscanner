@@ -77,7 +77,7 @@
     <script>
         let scannedData = [];
         let scanner = null;
-        let currentScanIndex = -1;
+        let lastScannedText = null;
 
         function startScanner() {
             if (scanner) {
@@ -103,17 +103,20 @@
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            currentScanIndex = scannedData.length;
-            scannedData.push({ text: decodedText });
-            showInventoryModal();
+            if (decodedText !== lastScannedText) {
+                lastScannedText = decodedText;
+                showInventoryModal(decodedText);
+            }
         }
 
         function onScanError(error) {
             console.warn(`Code scan error = ${error}`);
         }
 
-        function showInventoryModal() {
+        function showInventoryModal(scannedText) {
             document.getElementById('inventoryModal').classList.remove('hidden');
+            // Store the scanned text in a data attribute of the modal
+            document.getElementById('inventoryModal').setAttribute('data-scanned-text', scannedText);
         }
 
         function hideInventoryModal() {
@@ -159,6 +162,7 @@
         document.getElementById('stopButton').addEventListener('click', stopScanner);
 
         document.getElementById('saveInventory').addEventListener('click', () => {
+            const scannedText = document.getElementById('inventoryModal').getAttribute('data-scanned-text');
             const partNumber = document.getElementById('partNumber').value.trim();
             const rackLocation = document.getElementById('rackLocation').value.trim();
             const note = document.getElementById('note').value.trim();
@@ -168,18 +172,21 @@
                 return;
             }
 
-            scannedData[currentScanIndex].partNumber = partNumber;
-            scannedData[currentScanIndex].rackLocation = rackLocation;
-            scannedData[currentScanIndex].note = note;
+            scannedData.push({
+                text: scannedText,
+                partNumber: partNumber,
+                rackLocation: rackLocation,
+                note: note
+            });
 
             hideInventoryModal();
             updateScannedDataDisplay();
+            lastScannedText = null; // Reset lastScannedText to allow rescanning the same code
         });
 
         document.getElementById('cancelInventory').addEventListener('click', () => {
-            scannedData.pop(); // Remove the last scanned item if canceled
             hideInventoryModal();
-            updateScannedDataDisplay();
+            lastScannedText = null; // Reset lastScannedText to allow rescanning the same code
         });
 
         function resetModalInputs() {
