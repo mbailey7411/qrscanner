@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>20/20 Auto Glass QR Code Scanner</title>
+    <title>20/20 QR Scanner</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -28,11 +28,14 @@
         .modal-content {
             transition: transform 0.3s ease-in-out;
         }
+        .input-error {
+            border-color: #f56565;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
     <div class="container mx-auto p-4">
-        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800 dark:text-white">20/20 Auto Glass QR Code Scanner</h1>
+        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800 dark:text-white">20/20 QR Scanner</h1>
         
         <div class="neumorphic rounded-lg p-6 mb-8">
             <div id="reader" class="w-full max-w-md mx-auto mb-4"></div>
@@ -42,12 +45,12 @@
         </div>
 
         <div class="neumorphic rounded-lg p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Scanned Data</h2>
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Scanned Inventory</h2>
             <div id="scannedData" class="space-y-2"></div>
         </div>
 
         <div class="neumorphic rounded-lg p-6">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Email Results</h2>
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Email Inventory Report</h2>
             <input type="email" id="emailInput" placeholder="Enter your email" class="w-full p-2 mb-4 border rounded">
             <button id="emailButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105">
                 Send Email
@@ -61,17 +64,28 @@
         </button>
     </div>
 
-    <!-- Modal for adding notes -->
-    <div id="noteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+    <!-- Modal for adding inventory details -->
+    <div id="inventoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
         <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-xl w-full max-w-md modal-content transform scale-95">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Add Notes</h2>
-            <textarea id="noteInput" rows="4" class="w-full p-2 mb-4 border rounded resize-none" placeholder="Enter your notes here..."></textarea>
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Add Inventory Details</h2>
+            <div class="mb-4">
+                <label for="rackLocation" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rack Location *</label>
+                <input type="text" id="rackLocation" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+            </div>
+            <div class="mb-4">
+                <label for="partNumber" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Number *</label>
+                <input type="text" id="partNumber" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+            </div>
+            <div class="mb-4">
+                <label for="noteInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes (Optional)</label>
+                <textarea id="noteInput" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter any additional notes here..."></textarea>
+            </div>
             <div class="flex justify-end space-x-2">
-                <button id="cancelNote" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                <button id="cancelInventory" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
                     Cancel
                 </button>
-                <button id="saveNote" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
-                    Save Note
+                <button id="saveInventory" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                    Save Details
                 </button>
             </div>
         </div>
@@ -90,28 +104,32 @@
 
         function onScanSuccess(decodedText, decodedResult) {
             console.log(`Scan result: ${decodedText}`, decodedResult);
-            scannedData.push({ text: decodedText, note: '' });
+            scannedData.push({ 
+                text: decodedText, 
+                rackLocation: '', 
+                partNumber: '', 
+                note: '' 
+            });
             currentScanIndex = scannedData.length - 1;
-            updateScannedDataDisplay();
             scanner.pause(true);
-            showNoteModal();
+            showInventoryModal();
         }
 
-        function showNoteModal() {
-            document.getElementById('noteModal').classList.remove('hidden');
-            document.getElementById('noteModal').classList.add('flex');
+        function showInventoryModal() {
+            document.getElementById('inventoryModal').classList.remove('hidden');
+            document.getElementById('inventoryModal').classList.add('flex');
             setTimeout(() => {
                 document.querySelector('.modal-content').classList.remove('scale-95');
                 document.querySelector('.modal-content').classList.add('scale-100');
             }, 10);
         }
 
-        function hideNoteModal() {
+        function hideInventoryModal() {
             document.querySelector('.modal-content').classList.remove('scale-100');
             document.querySelector('.modal-content').classList.add('scale-95');
             setTimeout(() => {
-                document.getElementById('noteModal').classList.add('hidden');
-                document.getElementById('noteModal').classList.remove('flex');
+                document.getElementById('inventoryModal').classList.add('hidden');
+                document.getElementById('inventoryModal').classList.remove('flex');
             }, 300);
         }
 
@@ -122,7 +140,9 @@
                 const row = document.createElement('div');
                 row.className = 'bg-white dark:bg-gray-700 p-2 rounded shadow text-gray-800 dark:text-white mb-2';
                 row.innerHTML = `
-                    <strong>${index + 1}. ${data.text}</strong>
+                    <strong>${index + 1}. QR Code: ${data.text}</strong><br>
+                    <strong>Rack Location:</strong> ${data.rackLocation}<br>
+                    <strong>Part Number:</strong> ${data.partNumber}
                     ${data.note ? `<br><em>Note: ${data.note}</em>` : ''}
                 `;
                 container.appendChild(row);
@@ -131,27 +151,48 @@
 
         document.getElementById('startButton').addEventListener('click', startScanner);
 
-        document.getElementById('saveNote').addEventListener('click', () => {
-            const note = document.getElementById('noteInput').value;
+        document.getElementById('saveInventory').addEventListener('click', () => {
+            const rackLocation = document.getElementById('rackLocation').value.trim();
+            const partNumber = document.getElementById('partNumber').value.trim();
+            const note = document.getElementById('noteInput').value.trim();
+
+            if (!rackLocation || !partNumber) {
+                if (!rackLocation) document.getElementById('rackLocation').classList.add('input-error');
+                if (!partNumber) document.getElementById('partNumber').classList.add('input-error');
+                return;
+            }
+
+            scannedData[currentScanIndex].rackLocation = rackLocation;
+            scannedData[currentScanIndex].partNumber = partNumber;
             scannedData[currentScanIndex].note = note;
-            hideNoteModal();
+
+            hideInventoryModal();
             updateScannedDataDisplay();
-            document.getElementById('noteInput').value = '';
+            resetModalInputs();
             setTimeout(() => scanner.resume(), 500);
         });
 
-        document.getElementById('cancelNote').addEventListener('click', () => {
-            hideNoteModal();
-            document.getElementById('noteInput').value = '';
+        document.getElementById('cancelInventory').addEventListener('click', () => {
+            hideInventoryModal();
+            scannedData.pop(); // Remove the last scanned item if canceled
+            resetModalInputs();
             setTimeout(() => scanner.resume(), 500);
         });
+
+        function resetModalInputs() {
+            document.getElementById('rackLocation').value = '';
+            document.getElementById('partNumber').value = '';
+            document.getElementById('noteInput').value = '';
+            document.getElementById('rackLocation').classList.remove('input-error');
+            document.getElementById('partNumber').classList.remove('input-error');
+        }
 
         document.getElementById('emailButton').addEventListener('click', () => {
             const email = document.getElementById('emailInput').value;
             if (email && scannedData.length > 0) {
-                const subject = 'Scanned QR Code Data with Notes';
+                const subject = 'Inventory Report';
                 const body = scannedData.map((item, index) => 
-                    `Item ${index + 1}:\nQR Code: ${item.text}\nNote: ${item.note || 'No note added'}\n\n`
+                    `Item ${index + 1}:\nQR Code: ${item.text}\nRack Location: ${item.rackLocation}\nPart Number: ${item.partNumber}\nNote: ${item.note || 'No note added'}\n\n`
                 ).join('---\n\n');
                 window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             } else {
@@ -161,6 +202,15 @@
 
         document.getElementById('darkModeToggle').addEventListener('click', () => {
             document.body.classList.toggle('dark');
+        });
+
+        // Add input validation listeners
+        ['rackLocation', 'partNumber'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.remove('input-error');
+                }
+            });
         });
     </script>
 </body>
