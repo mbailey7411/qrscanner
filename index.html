@@ -19,6 +19,11 @@
         .delete-button:hover {
             transform: scale(1.1);
         }
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen">
@@ -29,9 +34,12 @@
             <button id="startButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Start Scanning
             </button>
+            <button id="stopButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2 hidden">
+                Stop Scanning
+            </button>
         </div>
 
-        <div id="reader" class="mb-4 mx-auto" style="max-width: 500px;"></div>
+        <div id="reader" class="mb-4"></div>
 
         <div id="scannedData" class="mb-4"></div>
 
@@ -72,15 +80,28 @@
         let currentScanIndex = -1;
 
         function startScanner() {
-            scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-            scanner.render(onScanSuccess, onScanError);
+            if (scanner) {
+                scanner.resume();
+            } else {
+                scanner = new Html5Qrcode("reader");
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                scanner.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
+                    .catch(err => console.error('Failed to start scanner:', err));
+            }
+            document.getElementById('startButton').classList.add('hidden');
+            document.getElementById('stopButton').classList.remove('hidden');
+        }
+
+        function stopScanner() {
+            if (scanner) {
+                scanner.pause();
+                document.getElementById('startButton').classList.remove('hidden');
+                document.getElementById('stopButton').classList.add('hidden');
+            }
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            if (scanner) {
-                scanner.clear();
-                scanner = null;
-            }
+            stopScanner();
             currentScanIndex = scannedData.length;
             scannedData.push({ text: decodedText });
             showInventoryModal();
@@ -134,6 +155,7 @@
         }
 
         document.getElementById('startButton').addEventListener('click', startScanner);
+        document.getElementById('stopButton').addEventListener('click', stopScanner);
 
         document.getElementById('saveInventory').addEventListener('click', () => {
             const rackLocation = document.getElementById('rackLocation').value.trim();
