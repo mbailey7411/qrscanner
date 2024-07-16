@@ -91,127 +91,142 @@
         </div>
     </div>
 
-    <script>
-        const scannedData = [];
-        let scanner = null;
-        let currentScanIndex = -1;
+<script>
+    const scannedData = [];
+    let scanner = null;
+    let currentScanIndex = -1;
 
-        function startScanner() {
+    function startScanner() {
+        if (scanner === null) {
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
             scanner = new Html5Qrcode("reader");
-            scanner.start({ facingMode: "environment" }, config, onScanSuccess);
+            scanner.start({ facingMode: "environment" }, config, onScanSuccess)
+                .catch(err => {
+                    console.error("Error starting scanner:", err);
+                    alert("Failed to start scanner. Please check camera permissions and try again.");
+                });
+        } else {
+            scanner.resume();
+        }
+        document.getElementById('startButton').textContent = 'Scanning...';
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`Scan result: ${decodedText}`, decodedResult);
+        scannedData.push({ 
+            text: decodedText, 
+            rackLocation: '', 
+            partNumber: '', 
+            note: '' 
+        });
+        currentScanIndex = scannedData.length - 1;
+        scanner.pause(true);
+        showInventoryModal();
+    }
+
+    function showInventoryModal() {
+        document.getElementById('inventoryModal').classList.remove('hidden');
+        document.getElementById('inventoryModal').classList.add('flex');
+        setTimeout(() => {
+            document.querySelector('.modal-content').classList.remove('scale-95');
+            document.querySelector('.modal-content').classList.add('scale-100');
+        }, 10);
+    }
+
+    function hideInventoryModal() {
+        document.querySelector('.modal-content').classList.remove('scale-100');
+        document.querySelector('.modal-content').classList.add('scale-95');
+        setTimeout(() => {
+            document.getElementById('inventoryModal').classList.add('hidden');
+            document.getElementById('inventoryModal').classList.remove('flex');
+        }, 300);
+    }
+
+    function updateScannedDataDisplay() {
+        const container = document.getElementById('scannedData');
+        container.innerHTML = '';
+        scannedData.forEach((data, index) => {
+            const row = document.createElement('div');
+            row.className = 'bg-white dark:bg-gray-700 p-2 rounded shadow text-gray-800 dark:text-white mb-2';
+            row.innerHTML = `
+                <strong>${index + 1}. QR Code: ${data.text}</strong><br>
+                <strong>Rack Location:</strong> ${data.rackLocation}<br>
+                <strong>Part Number:</strong> ${data.partNumber}
+                ${data.note ? `<br><em>Note: ${data.note}</em>` : ''}
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    document.getElementById('startButton').addEventListener('click', startScanner);
+
+    document.getElementById('saveInventory').addEventListener('click', () => {
+        const rackLocation = document.getElementById('rackLocation').value.trim();
+        const partNumber = document.getElementById('partNumber').value.trim();
+        const note = document.getElementById('noteInput').value.trim();
+
+        if (!rackLocation || !partNumber) {
+            if (!rackLocation) document.getElementById('rackLocation').classList.add('input-error');
+            if (!partNumber) document.getElementById('partNumber').classList.add('input-error');
+            return;
         }
 
-        function onScanSuccess(decodedText, decodedResult) {
-            console.log(`Scan result: ${decodedText}`, decodedResult);
-            scannedData.push({ 
-                text: decodedText, 
-                rackLocation: '', 
-                partNumber: '', 
-                note: '' 
-            });
-            currentScanIndex = scannedData.length - 1;
-            scanner.pause(true);
-            showInventoryModal();
+        scannedData[currentScanIndex].rackLocation = rackLocation;
+        scannedData[currentScanIndex].partNumber = partNumber;
+        scannedData[currentScanIndex].note = note;
+
+        hideInventoryModal();
+        updateScannedDataDisplay();
+        resetModalInputs();
+        setTimeout(() => {
+            scanner.resume();
+            document.getElementById('startButton').textContent = 'Scanning...';
+        }, 500);
+    });
+
+    document.getElementById('cancelInventory').addEventListener('click', () => {
+        hideInventoryModal();
+        scannedData.pop(); // Remove the last scanned item if canceled
+        resetModalInputs();
+        setTimeout(() => {
+            scanner.resume();
+            document.getElementById('startButton').textContent = 'Scanning...';
+        }, 500);
+    });
+
+    function resetModalInputs() {
+        document.getElementById('rackLocation').value = '';
+        document.getElementById('partNumber').value = '';
+        document.getElementById('noteInput').value = '';
+        document.getElementById('rackLocation').classList.remove('input-error');
+        document.getElementById('partNumber').classList.remove('input-error');
+    }
+
+    document.getElementById('emailButton').addEventListener('click', () => {
+        const email = document.getElementById('emailInput').value;
+        if (email && scannedData.length > 0) {
+            const subject = 'Inventory Report';
+            const body = scannedData.map((item, index) => 
+                `Item ${index + 1}:\nQR Code: ${item.text}\nRack Location: ${item.rackLocation}\nPart Number: ${item.partNumber}\nNote: ${item.note || 'No note added'}\n\n`
+            ).join('---\n\n');
+            window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        } else {
+            alert('Please enter an email address and scan at least one QR code.');
         }
+    });
 
-        function showInventoryModal() {
-            document.getElementById('inventoryModal').classList.remove('hidden');
-            document.getElementById('inventoryModal').classList.add('flex');
-            setTimeout(() => {
-                document.querySelector('.modal-content').classList.remove('scale-95');
-                document.querySelector('.modal-content').classList.add('scale-100');
-            }, 10);
-        }
+    document.getElementById('darkModeToggle').addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+    });
 
-        function hideInventoryModal() {
-            document.querySelector('.modal-content').classList.remove('scale-100');
-            document.querySelector('.modal-content').classList.add('scale-95');
-            setTimeout(() => {
-                document.getElementById('inventoryModal').classList.add('hidden');
-                document.getElementById('inventoryModal').classList.remove('flex');
-            }, 300);
-        }
-
-        function updateScannedDataDisplay() {
-            const container = document.getElementById('scannedData');
-            container.innerHTML = '';
-            scannedData.forEach((data, index) => {
-                const row = document.createElement('div');
-                row.className = 'bg-white dark:bg-gray-700 p-2 rounded shadow text-gray-800 dark:text-white mb-2';
-                row.innerHTML = `
-                    <strong>${index + 1}. QR Code: ${data.text}</strong><br>
-                    <strong>Rack Location:</strong> ${data.rackLocation}<br>
-                    <strong>Part Number:</strong> ${data.partNumber}
-                    ${data.note ? `<br><em>Note: ${data.note}</em>` : ''}
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        document.getElementById('startButton').addEventListener('click', startScanner);
-
-        document.getElementById('saveInventory').addEventListener('click', () => {
-            const rackLocation = document.getElementById('rackLocation').value.trim();
-            const partNumber = document.getElementById('partNumber').value.trim();
-            const note = document.getElementById('noteInput').value.trim();
-
-            if (!rackLocation || !partNumber) {
-                if (!rackLocation) document.getElementById('rackLocation').classList.add('input-error');
-                if (!partNumber) document.getElementById('partNumber').classList.add('input-error');
-                return;
+    // Add input validation listeners
+    ['rackLocation', 'partNumber'].forEach(id => {
+        document.getElementById(id).addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                this.classList.remove('input-error');
             }
-
-            scannedData[currentScanIndex].rackLocation = rackLocation;
-            scannedData[currentScanIndex].partNumber = partNumber;
-            scannedData[currentScanIndex].note = note;
-
-            hideInventoryModal();
-            updateScannedDataDisplay();
-            resetModalInputs();
-            setTimeout(() => scanner.resume(), 500);
         });
-
-        document.getElementById('cancelInventory').addEventListener('click', () => {
-            hideInventoryModal();
-            scannedData.pop(); // Remove the last scanned item if canceled
-            resetModalInputs();
-            setTimeout(() => scanner.resume(), 500);
-        });
-
-        function resetModalInputs() {
-            document.getElementById('rackLocation').value = '';
-            document.getElementById('partNumber').value = '';
-            document.getElementById('noteInput').value = '';
-            document.getElementById('rackLocation').classList.remove('input-error');
-            document.getElementById('partNumber').classList.remove('input-error');
-        }
-
-        document.getElementById('emailButton').addEventListener('click', () => {
-            const email = document.getElementById('emailInput').value;
-            if (email && scannedData.length > 0) {
-                const subject = 'Inventory Report';
-                const body = scannedData.map((item, index) => 
-                    `Item ${index + 1}:\nQR Code: ${item.text}\nRack Location: ${item.rackLocation}\nPart Number: ${item.partNumber}\nNote: ${item.note || 'No note added'}\n\n`
-                ).join('---\n\n');
-                window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            } else {
-                alert('Please enter an email address and scan at least one QR code.');
-            }
-        });
-
-        document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark');
-        });
-
-        // Add input validation listeners
-        ['rackLocation', 'partNumber'].forEach(id => {
-            document.getElementById(id).addEventListener('input', function() {
-                if (this.value.trim() !== '') {
-                    this.classList.remove('input-error');
-                }
-            });
-        });
-    </script>
+    });
+</script>
 </body>
 </html>
