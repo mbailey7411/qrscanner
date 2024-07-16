@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner and Emailer</title>
+    <title>20/20 Auto Glass QR Code Scanner</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -22,11 +22,17 @@
         .pulse {
             animation: pulse 2s infinite;
         }
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
     <div class="container mx-auto p-4">
-        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800 dark:text-white">QR Code Scanner and Emailer</h1>
+        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800 dark:text-white">Advanced QR Code Scanner and Emailer</h1>
         
         <div class="neumorphic rounded-lg p-6 mb-8">
             <div id="reader" class="w-full max-w-md mx-auto mb-4"></div>
@@ -55,9 +61,26 @@
         </button>
     </div>
 
+    <!-- Modal for adding notes -->
+    <div id="noteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden modal">
+        <div class="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-xl w-full max-w-md modal-content transform scale-95">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Add Notes</h2>
+            <textarea id="noteInput" rows="4" class="w-full p-2 mb-4 border rounded resize-none" placeholder="Enter your notes here..."></textarea>
+            <div class="flex justify-end space-x-2">
+                <button id="cancelNote" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                    Cancel
+                </button>
+                <button id="saveNote" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                    Save Note
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const scannedData = [];
         let scanner = null;
+        let currentScanIndex = -1;
 
         function startScanner() {
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
@@ -67,10 +90,29 @@
 
         function onScanSuccess(decodedText, decodedResult) {
             console.log(`Scan result: ${decodedText}`, decodedResult);
-            scannedData.push(decodedText);
+            scannedData.push({ text: decodedText, note: '' });
+            currentScanIndex = scannedData.length - 1;
             updateScannedDataDisplay();
             scanner.pause(true);
-            setTimeout(() => scanner.resume(), 2000);
+            showNoteModal();
+        }
+
+        function showNoteModal() {
+            document.getElementById('noteModal').classList.remove('hidden');
+            document.getElementById('noteModal').classList.add('flex');
+            setTimeout(() => {
+                document.querySelector('.modal-content').classList.remove('scale-95');
+                document.querySelector('.modal-content').classList.add('scale-100');
+            }, 10);
+        }
+
+        function hideNoteModal() {
+            document.querySelector('.modal-content').classList.remove('scale-100');
+            document.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                document.getElementById('noteModal').classList.add('hidden');
+                document.getElementById('noteModal').classList.remove('flex');
+            }, 300);
         }
 
         function updateScannedDataDisplay() {
@@ -78,19 +120,39 @@
             container.innerHTML = '';
             scannedData.forEach((data, index) => {
                 const row = document.createElement('div');
-                row.className = 'bg-white dark:bg-gray-700 p-2 rounded shadow text-gray-800 dark:text-white';
-                row.textContent = `${index + 1}. ${data}`;
+                row.className = 'bg-white dark:bg-gray-700 p-2 rounded shadow text-gray-800 dark:text-white mb-2';
+                row.innerHTML = `
+                    <strong>${index + 1}. ${data.text}</strong>
+                    ${data.note ? `<br><em>Note: ${data.note}</em>` : ''}
+                `;
                 container.appendChild(row);
             });
         }
 
         document.getElementById('startButton').addEventListener('click', startScanner);
 
+        document.getElementById('saveNote').addEventListener('click', () => {
+            const note = document.getElementById('noteInput').value;
+            scannedData[currentScanIndex].note = note;
+            hideNoteModal();
+            updateScannedDataDisplay();
+            document.getElementById('noteInput').value = '';
+            setTimeout(() => scanner.resume(), 500);
+        });
+
+        document.getElementById('cancelNote').addEventListener('click', () => {
+            hideNoteModal();
+            document.getElementById('noteInput').value = '';
+            setTimeout(() => scanner.resume(), 500);
+        });
+
         document.getElementById('emailButton').addEventListener('click', () => {
             const email = document.getElementById('emailInput').value;
             if (email && scannedData.length > 0) {
-                const subject = 'Scanned QR Code Data';
-                const body = scannedData.join('\n');
+                const subject = 'Scanned QR Code Data with Notes';
+                const body = scannedData.map((item, index) => 
+                    `Item ${index + 1}:\nQR Code: ${item.text}\nNote: ${item.note || 'No note added'}\n\n`
+                ).join('---\n\n');
                 window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             } else {
                 alert('Please enter an email address and scan at least one QR code.');
