@@ -245,6 +245,7 @@
             removeButton.onclick = () => {
                 li.remove();
                 scannedItems.delete(item);
+                updateVendorSectionVisibility();
             };
 
             li.appendChild(itemContent);
@@ -263,6 +264,24 @@
                 inventoryList.appendChild(li);
                 document.getElementById('inventorySection').style.display = 'block';
             }
+        }
+
+        function updateVendorSectionVisibility() {
+            const sections = [
+                { id: 'pgwSection', list: pgwList },
+                { id: 'pilkingtonSection', list: pilkingtonList },
+                { id: 'mygrantSection', list: mygrantList },
+                { id: 'inventorySection', list: inventoryList }
+            ];
+
+            sections.forEach(section => {
+                const sectionElement = document.getElementById(section.id);
+                if (section.list.children.length === 0) {
+                    sectionElement.style.display = 'none';
+                } else {
+                    sectionElement.style.display = 'block';
+                }
+            });
         }
 
         function sendEmailReport() {
