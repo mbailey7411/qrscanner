@@ -310,34 +310,33 @@
         }
 
         function emailVendorReturns(vendor) {
-            let items, email, subject;
-            switch (vendor) {
-                case 'PGW':
-                    items = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
-                    email = 'RGrier@pgwautoglass.com';
-                    subject = 'PGW Returns';
-                    break;
-                case 'Pilkington':
-                    items = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
-                    email = 'marco.yeargin@nsg.com';
-                    subject = 'Pilkington Returns';
-                    break;
-                case 'Mygrant':
-                    items = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
-                    email = 'poliver@mygrantglass.com';
-                    subject = 'Mygrant Returns';
-                    break;
-            }
+    let items, email, subject;
+    switch (vendor) {
+        case 'PGW':
+            items = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
+            email = 'RGrier@pgwautoglass.com';
+            subject = 'PGW Returns';
+            break;
+        case 'Pilkington':
+            items = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
+            email = 'marco.yeargin@nsg.com';
+            subject = 'Pilkington Returns';
+            break;
+        case 'Mygrant':
+            items = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
+            email = 'poliver@mygrantglass.com';
+            subject = 'Mygrant Returns';
+            break;
+    }
 
-            const report = `
-                ${vendor} Returns:
-                ${items.join('\n\n')}
-            `;
+    const report = `These items are labeled and ready to be picked up in our return area:
 
-            const encodedSubject = encodeURIComponent(subject);
-            const encodedBody = encodeURIComponent(report);
-            window.location.href = `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}`;
-        }
+${items.join('\n\n')}`;
+
+    const encodedSubject = encodeURIComponent(subject);
+    const encodedBody = encodeURIComponent(report);
+    window.location.href = `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}`;
+}
     </script>
 </body>
 </html>
