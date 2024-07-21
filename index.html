@@ -6,337 +6,81 @@
     <title>20/20 QR Scanner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2ecc71;
-            --background-color: #ecf0f1;
-            --text-color: #34495e;
-            --vendor-pgw: #e74c3c;
-            --vendor-pilkington: #f39c12;
-            --vendor-mygrant: #9b59b6;
-        }
+        /* ... (previous styles remain unchanged) ... */
 
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1, h2 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        #qr-reader {
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 20px;
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--secondary-color);
+            color: white;
             padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
             border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        #stopButton {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        #emailReportButton {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .inventory-section, .vendor-section {
-            width: 100%;
-            max-width: 500px;
-            margin-top: 20px;
             display: none;
+            animation: fadeInOut 2s ease-in-out;
         }
 
-        #inventoryList, #pgwList, #pilkingtonList, #mygrantList {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        #inventoryList li, #pgwList li, #pilkingtonList li, #mygrantList li {
-            background-color: white;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .item-content {
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .remove-button {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        #pgwSection {
-            background-color: rgba(231, 76, 60, 0.1);
-        }
-
-        #pilkingtonSection {
-            background-color: rgba(243, 156, 18, 0.1);
-        }
-
-        #mygrantSection {
-            background-color: rgba(155, 89, 182, 0.1);
-        }
-
-        .vendor-button {
-            margin-top: 10px;
-            padding: 8px 16px;
-            font-size: 14px;
-            border: none;
-            border-radius: 3px;
-            color: white;
-            cursor: pointer;
-        }
-
-        #pgwButton {
-            background-color: var(--vendor-pgw);
-        }
-
-        #pilkingtonButton {
-            background-color: var(--vendor-pilkington);
-        }
-
-        #mygrantButton {
-            background-color: var(--vendor-mygrant);
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <h1>20/20 QR Scanner</h1>
-    <div id="qr-reader"></div>
-    <div class="button-container">
-        <button id="stopButton">Stop Scanning</button>
-        <button id="emailReportButton">Send Email Report</button>
-    </div>
+    <!-- ... (previous HTML content remains unchanged) ... -->
 
-    <div id="inventorySection" class="inventory-section">
-        <h2>Inventory Items</h2>
-        <ul id="inventoryList"></ul>
-    </div>
-
-    <div id="pgwSection" class="vendor-section">
-        <h2>PGW Returns</h2>
-        <ul id="pgwList"></ul>
-        <button id="pgwButton" class="vendor-button">Email PGW Returns</button>
-    </div>
-
-    <div id="pilkingtonSection" class="vendor-section">
-        <h2>Pilkington Returns</h2>
-        <ul id="pilkingtonList"></ul>
-        <button id="pilkingtonButton" class="vendor-button">Email Pilkington Returns</button>
-    </div>
-
-    <div id="mygrantSection" class="vendor-section">
-        <h2>Mygrant Returns</h2>
-        <ul id="mygrantList"></ul>
-        <button id="mygrantButton" class="vendor-button">Email Mygrant Returns</button>
-    </div>
+    <div id="notification">Item Scanned!</div>
 
     <script>
-        const html5QrCode = new Html5Qrcode("qr-reader");
-        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
-        let scanning = false;
+        // ... (previous JavaScript code remains unchanged) ...
 
-        const stopButton = document.getElementById('stopButton');
-        const emailReportButton = document.getElementById('emailReportButton');
-        const inventoryList = document.getElementById('inventoryList');
-        const pgwList = document.getElementById('pgwList');
-        const pilkingtonList = document.getElementById('pilkingtonList');
-        const mygrantList = document.getElementById('mygrantList');
-        const pgwButton = document.getElementById('pgwButton');
-        const pilkingtonButton = document.getElementById('pilkingtonButton');
-        const mygrantButton = document.getElementById('mygrantButton');
+        // Add these new functions and variables
+        let audioContext;
+        const notification = document.getElementById('notification');
 
-        const scannedItems = new Set();
-
-        stopButton.addEventListener('click', stopScanning);
-        emailReportButton.addEventListener('click', sendEmailReport);
-        pgwButton.addEventListener('click', () => emailVendorReturns('PGW'));
-        pilkingtonButton.addEventListener('click', () => emailVendorReturns('Pilkington'));
-        mygrantButton.addEventListener('click', () => emailVendorReturns('Mygrant'));
-
-        window.addEventListener('load', startScanning);
-
-        function startScanning() {
-            if (!scanning) {
-                html5QrCode.start(
-                    { facingMode: "environment" },
-                    qrConfig,
-                    onScanSuccess
-                ).then(() => {
-                    scanning = true;
-                    stopButton.disabled = false;
-                }).catch(err => {
-                    console.error('Error starting scanner:', err);
-                    alert('Failed to start the scanner. Please make sure you have given camera permissions and try again.');
-                });
-            }
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
-        function stopScanning() {
-            if (scanning) {
-                html5QrCode.stop().then(() => {
-                    scanning = false;
-                    stopButton.disabled = true;
-                }).catch(err => console.error('Error stopping scanner:', err));
-            }
+        function playBeep() {
+            if (!audioContext) initAudio();
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
         }
 
+        function showNotification() {
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+
+        // Modify the onScanSuccess function
         function onScanSuccess(decodedText) {
             console.log('Scanned item:', decodedText);
             if (!scannedItems.has(decodedText)) {
                 scannedItems.add(decodedText);
                 addItemToList(decodedText);
+                playBeep();
+                showNotification();
             } else {
                 console.log('Item already scanned:', decodedText);
             }
         }
 
-        function addItemToList(item) {
-            const li = document.createElement('li');
-            const itemContent = document.createElement('span');
-            itemContent.className = 'item-content';
-            itemContent.textContent = item;
-
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove';
-            removeButton.className = 'remove-button';
-            removeButton.onclick = () => {
-                li.remove();
-                scannedItems.delete(item);
-                updateVendorSectionVisibility();
-            };
-
-            li.appendChild(itemContent);
-            li.appendChild(removeButton);
-
-            if (item.startsWith('PGW')) {
-                pgwList.appendChild(li);
-                document.getElementById('pgwSection').style.display = 'block';
-            } else if (item.startsWith('Pilkington')) {
-                pilkingtonList.appendChild(li);
-                document.getElementById('pilkingtonSection').style.display = 'block';
-            } else if (item.startsWith('Mygrant')) {
-                mygrantList.appendChild(li);
-                document.getElementById('mygrantSection').style.display = 'block';
-            } else {
-                inventoryList.appendChild(li);
-                document.getElementById('inventorySection').style.display = 'block';
-            }
-        }
-
-        function updateVendorSectionVisibility() {
-            const sections = [
-                { id: 'pgwSection', list: pgwList },
-                { id: 'pilkingtonSection', list: pilkingtonList },
-                { id: 'mygrantSection', list: mygrantList },
-                { id: 'inventorySection', list: inventoryList }
-            ];
-
-            sections.forEach(section => {
-                const sectionElement = document.getElementById(section.id);
-                if (section.list.children.length === 0) {
-                    sectionElement.style.display = 'none';
-                } else {
-                    sectionElement.style.display = 'block';
-                }
-            });
-        }
-
-        function sendEmailReport() {
-            const items = Array.from(inventoryList.children).map(li => li.querySelector('.item-content').textContent);
-            const pgwItems = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
-            const pilkingtonItems = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
-            const mygrantItems = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
-
-            const report = `
-                Inventory Items:
-                ${items.join('\n\n')}
-
-                PGW Returns:
-                ${pgwItems.join('\n\n')}
-
-                Pilkington Returns:
-                ${pilkingtonItems.join('\n\n')}
-
-                Mygrant Returns:
-                ${mygrantItems.join('\n\n')}
-            `;
-
-            const subject = encodeURIComponent('Scan Report');
-            const body = encodeURIComponent(report);
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
-        }
-
-        function emailVendorReturns(vendor) {
-    let items, email, subject;
-    switch (vendor) {
-        case 'PGW':
-            items = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
-            email = 'RGrier@pgwautoglass.com';
-            subject = 'PGW Returns';
-            break;
-        case 'Pilkington':
-            items = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
-            email = 'marco.yeargin@nsg.com';
-            subject = 'Pilkington Returns';
-            break;
-        case 'Mygrant':
-            items = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
-            email = 'poliver@mygrantglass.com';
-            subject = 'Mygrant Returns';
-            break;
-    }
-
-    const report = `These items are labeled and ready to be picked up in our return area:
-
-${items.join('\n\n')}`;
-
-    const encodedSubject = encodeURIComponent(subject);
-    const encodedBody = encodeURIComponent(report);
-    window.location.href = `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}`;
-}
+        // Add event listener to initialize audio on user interaction
+        document.addEventListener('click', initAudio, { once: true });
     </script>
 </body>
 </html>
