@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20/20 QR Code Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .scanner-section, .returns-section, .inventory-section {
+            margin: 20px 0;
+        }
+        .scanner-section h2, .returns-section h2, .inventory-section h2 {
+            font-size: 1.5em;
+        }
+        .scanned-item, .return-item, .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+        }
+        .return-item {
+            background-color: #ffe9e9;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>20/20 QR Code Scanner</h1>
+    <div class="scanner-section">
+        <h2>Scanned Items</h2>
+        <div id="scanned-items"></div>
+        <button class="button" onclick="sendEmailReport()">Send Email Report</button>
+        <button class="button" onclick="stopScanning()">Stop Scanning</button>
+    </div>
+    <div id="dynamic-sections"></div>
+
+    <script>
+        let scannedItems = [];
+        let pilkingtonReturns = [];
+        let pgwReturns = [];
+        let mygrantReturns = [];
+        let inventoryItems = [];
+
+        window.onload = startScanning;
+
+        function startScanning() {
+            // Functionality to start scanning
+            console.log("Scanning started...");
+            // Simulating a scan event for demonstration purposes
+            setTimeout(() => addScannedItem("Pilkington Glass"), 1000);
+            setTimeout(() => addScannedItem("PGW Windshield"), 2000);
+            setTimeout(() => addScannedItem("Mygrant Auto Parts"), 3000);
+            setTimeout(() => addScannedItem("Generic Item 1"), 4000);
+        }
+
+        function stopScanning() {
+            // Functionality to stop scanning
+            console.log("Scanning stopped...");
+        }
+
+        function addScannedItem(item) {
+            scannedItems.push(item);
+            displayItems("scanned-items", scannedItems, "scanned-item");
+
+            if (item.includes("Pilkington")) {
+                pilkingtonReturns.push(item);
+                createSectionIfNeeded("pilkington-returns-section", "Pilkington Returns", sendEmailReturns.bind(null, 'Pilkington'));
+                displayItems("pilkington-returns", pilkingtonReturns, "return-item");
+            } else if (item.includes("PGW")) {
+                pgwReturns.push(item);
+                createSectionIfNeeded("pgw-returns-section", "PGW Returns", sendEmailReturns.bind(null, 'PGW'));
+                displayItems("pgw-returns", pgwReturns, "return-item");
+            } else if (item.includes("Mygrant")) {
+                mygrantReturns.push(item);
+                createSectionIfNeeded("mygrant-returns-section", "Mygrant Returns", sendEmailReturns.bind(null, 'Mygrant'));
+                displayItems("mygrant-returns", mygrantReturns, "return-item");
+            } else {
+                inventoryItems.push(item);
+                createSectionIfNeeded("inventory-items-section", "Inventory Items");
+                displayItems("inventory-items", inventoryItems, "inventory-item");
+            }
+        }
+
+        function createSectionIfNeeded(sectionId, sectionTitle, emailFunction = null) {
+            if (!document.getElementById(sectionId)) {
+                const section = document.createElement("div");
+                section.className = "returns-section";
+                section.id = sectionId;
+                section.innerHTML = `<h2>${sectionTitle}</h2>
+                                     <div id="${sectionId.replace('-section', '')}"></div>`;
+                if (emailFunction) {
+                    const button = document.createElement("button");
+                    button.className = "button";
+                    button.innerText = "Email Returns List";
+                    button.onclick = emailFunction;
+                    section.appendChild(button);
+                }
+                document.getElementById("dynamic-sections").appendChild(section);
+            }
+        }
+
+        function displayItems(containerId, items, itemClass) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            items.forEach((item, index) => {
+                const div = document.createElement("div");
+                div.className = itemClass;
+                div.innerHTML = `${item} <button onclick="removeItem('${containerId}', ${index})">Remove</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function removeItem(containerId, index) {
+            if (containerId === "scanned-items") {
+                scannedItems.splice(index, 1);
+                displayItems(containerId, scannedItems, "scanned-item");
+            } else if (containerId === "pilkington-returns") {
+                pilkingtonReturns.splice(index, 1);
+                displayItems(containerId, pilkingtonReturns, "return-item");
+                if (pilkingtonReturns.length === 0) {
+                    document.getElementById("pilkington-returns-section").remove();
+                }
+            } else if (containerId === "pgw-returns") {
+                pgwReturns.splice(index, 1);
+                displayItems(containerId, pgwReturns, "return-item");
+                if (pgwReturns.length === 0) {
+                    document.getElementById("pgw-returns-section").remove();
+                }
+            } else if (containerId === "mygrant-returns") {
+                mygrantReturns.splice(index, 1);
+                displayItems(containerId, mygrantReturns, "return-item");
+                if (mygrantReturns.length === 0) {
+                    document.getElementById("mygrant-returns-section").remove();
+                }
+            } else if (containerId === "inventory-items") {
+                inventoryItems.splice(index, 1);
+                displayItems(containerId, inventoryItems, "inventory-item");
+                if (inventoryItems.length === 0) {
+                    document.getElementById("inventory-items-section").remove();
+                }
+            }
+        }
+
+        function sendEmailReport() {
+            // Functionality to send email report for scanned items
+            console.log("Sending email report for scanned items...");
+        }
+
+        function sendEmailReturns(vendor) {
+            let email;
+            if (vendor === "Pilkington") {
+                email = "marco.yeargin@nsg.com";
+            } else if (vendor === "PGW") {
+                email = "RGrier@pgwautoglass.com";
+            } else if (vendor === "Mygrant") {
+                email = "poliver@mygrantglass.com";
+            }
+            window.location.href = `mailto:${email}?subject=${vendor} Returns List&body=${encodeURIComponent(getReturnsList(vendor))}`;
+        }
+
+        function getReturnsList(vendor) {
+            let items;
+            if (vendor === "Pilkington") {
+                items = pilkingtonReturns;
+            } else if (vendor === "PGW") {
+                items = pgwReturns;
+            } else if (vendor === "Mygrant") {
+                items = mygrantReturns;
+            }
+            return items.join("\n");
+        }
+    </script>
+</body>
+</html>
