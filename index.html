@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>20/20 QR Code Scanner - Enhanced Edition</title>
+    <title>20/20 QR Scanner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root {
@@ -70,13 +70,14 @@
             color: white;
         }
 
-        .inventory-section {
+        .inventory-section, .vendor-section {
             width: 100%;
             max-width: 500px;
             margin-top: 20px;
+            display: none;
         }
 
-        .inventory-section h2 {
+        .inventory-section h2, .vendor-section h2 {
             color: var(--primary-color);
             margin-bottom: 10px;
         }
@@ -109,15 +110,6 @@
             border-radius: 3px;
             cursor: pointer;
             margin-left: 10px;
-        }
-
-        .vendor-section {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            width: 100%;
-            max-width: 500px;
-            display: none;
         }
 
         #pgwSection {
@@ -156,14 +148,14 @@
     </style>
 </head>
 <body>
-    <h1>20/20 QR Code Scanner - Enhanced Edition</h1>
+    <h1>20/20 QR Scanner</h1>
     <div id="qr-reader"></div>
     <div class="button-container">
         <button id="stopButton">Stop Scanning</button>
         <button id="emailReportButton">Send Email Report</button>
     </div>
 
-    <div class="inventory-section">
+    <div id="inventorySection" class="inventory-section">
         <h2>Inventory Items</h2>
         <ul id="inventoryList"></ul>
     </div>
@@ -214,23 +206,26 @@
 
         function startScanning() {
             if (!scanning) {
-                html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess)
-                    .then(() => {
-                        scanning = true;
-                        stopButton.disabled = false;
-                    })
-                    .catch(err => console.error('Error starting scanner:', err));
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    qrConfig,
+                    onScanSuccess
+                ).then(() => {
+                    scanning = true;
+                    stopButton.disabled = false;
+                }).catch(err => {
+                    console.error('Error starting scanner:', err);
+                    alert('Failed to start the scanner. Please make sure you have given camera permissions and try again.');
+                });
             }
         }
 
         function stopScanning() {
             if (scanning) {
-                html5QrCode.stop()
-                    .then(() => {
-                        scanning = false;
-                        stopButton.disabled = true;
-                    })
-                    .catch(err => console.error('Error stopping scanner:', err));
+                html5QrCode.stop().then(() => {
+                    scanning = false;
+                    stopButton.disabled = true;
+                }).catch(err => console.error('Error stopping scanner:', err));
             }
         }
 
@@ -272,6 +267,7 @@
                 document.getElementById('mygrantSection').style.display = 'block';
             } else {
                 inventoryList.appendChild(li);
+                document.getElementById('inventorySection').style.display = 'block';
             }
         }
 
@@ -300,16 +296,19 @@
         }
 
         function emailVendorReturns(vendor) {
-            let items;
+            let items, email;
             switch (vendor) {
                 case 'PGW':
                     items = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
+                    email = 'RGrier@pgwautoglass.com';
                     break;
                 case 'Pilkington':
                     items = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
+                    email = 'marco.yeargin@nsg.com';
                     break;
                 case 'Mygrant':
                     items = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
+                    email = 'poliver@mygrantglass.com';
                     break;
             }
 
@@ -318,8 +317,8 @@
                 ${items.join('\n\n')}
             `;
 
-            console.log(`Sending ${vendor} returns email:`, report);
-            alert(`${vendor} returns email sent successfully!`);
+            console.log(`Sending ${vendor} returns email to ${email}:`, report);
+            alert(`${vendor} returns email sent successfully to ${email}!`);
         }
     </script>
 </body>
