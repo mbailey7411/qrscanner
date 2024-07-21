@@ -27,10 +27,10 @@
             align-items: center;
         }
 
-        h1 {
+        h1, h2 {
             color: var(--primary-color);
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         #qr-reader {
@@ -75,11 +75,6 @@
             max-width: 500px;
             margin-top: 20px;
             display: none;
-        }
-
-        .inventory-section h2, .vendor-section h2 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
         }
 
         #inventoryList, #pgwList, #pilkingtonList, #mygrantList {
@@ -161,19 +156,19 @@
     </div>
 
     <div id="pgwSection" class="vendor-section">
-        <h2>PGW Items</h2>
+        <h2>PGW Returns</h2>
         <ul id="pgwList"></ul>
         <button id="pgwButton" class="vendor-button">Email PGW Returns</button>
     </div>
 
     <div id="pilkingtonSection" class="vendor-section">
-        <h2>Pilkington Items</h2>
+        <h2>Pilkington Returns</h2>
         <ul id="pilkingtonList"></ul>
         <button id="pilkingtonButton" class="vendor-button">Email Pilkington Returns</button>
     </div>
 
     <div id="mygrantSection" class="vendor-section">
-        <h2>Mygrant Items</h2>
+        <h2>Mygrant Returns</h2>
         <ul id="mygrantList"></ul>
         <button id="mygrantButton" class="vendor-button">Email Mygrant Returns</button>
     </div>
@@ -201,7 +196,6 @@
         pilkingtonButton.addEventListener('click', () => emailVendorReturns('Pilkington'));
         mygrantButton.addEventListener('click', () => emailVendorReturns('Mygrant'));
 
-        // Start scanning automatically when the page loads
         window.addEventListener('load', startScanning);
 
         function startScanning() {
@@ -281,34 +275,38 @@
                 Inventory Items:
                 ${items.join('\n\n')}
 
-                PGW Items:
+                PGW Returns:
                 ${pgwItems.join('\n\n')}
 
-                Pilkington Items:
+                Pilkington Returns:
                 ${pilkingtonItems.join('\n\n')}
 
-                Mygrant Items:
+                Mygrant Returns:
                 ${mygrantItems.join('\n\n')}
             `;
 
-            console.log('Sending email report:', report);
-            alert('Email report sent successfully!');
+            const subject = encodeURIComponent('Scan Report');
+            const body = encodeURIComponent(report);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
         }
 
         function emailVendorReturns(vendor) {
-            let items, email;
+            let items, email, subject;
             switch (vendor) {
                 case 'PGW':
                     items = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
                     email = 'RGrier@pgwautoglass.com';
+                    subject = 'PGW Returns';
                     break;
                 case 'Pilkington':
                     items = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
                     email = 'marco.yeargin@nsg.com';
+                    subject = 'Pilkington Returns';
                     break;
                 case 'Mygrant':
                     items = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
                     email = 'poliver@mygrantglass.com';
+                    subject = 'Mygrant Returns';
                     break;
             }
 
@@ -317,8 +315,9 @@
                 ${items.join('\n\n')}
             `;
 
-            console.log(`Sending ${vendor} returns email to ${email}:`, report);
-            alert(`${vendor} returns email sent successfully to ${email}!`);
+            const encodedSubject = encodeURIComponent(subject);
+            const encodedBody = encodeURIComponent(report);
+            window.location.href = `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}`;
         }
     </script>
 </body>
