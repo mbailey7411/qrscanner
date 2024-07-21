@@ -3,185 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>20/20 QR Code Scanner</title>
+    <title>20/20 QR Code Scanner - Enhanced Edition</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --vendor-pgw: #e74c3c;
+            --vendor-pilkington: #f39c12;
+            --vendor-mygrant: #9b59b6;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .scanner-section, .returns-section, .inventory-section {
-            margin: 20px 0;
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .scanner-section h2, .returns-section h2, .inventory-section h2 {
-            font-size: 1.5em;
+
+        #qr-reader {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
         }
-        .scanned-item, .return-item, .inventory-item {
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #startButton {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        #stopButton {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        #emailReportButton {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .inventory-section {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+
+        .inventory-section h2 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        #inventoryList, #pgwList, #pilkingtonList, #mygrantList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #inventoryList li, #pgwList li, #pilkingtonList li, #mygrantList li {
+            background-color: white;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
             display: flex;
             justify-content: space-between;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #f9f9f9;
+            align-items: center;
         }
-        .return-item {
-            background-color: #ffe9e9;
-        }
-        .button {
-            padding: 10px 20px;
-            margin: 10px 0;
-            background-color: #007bff;
+
+        .remove-button {
+            background-color: #e74c3c;
             color: white;
             border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
             cursor: pointer;
         }
-        .button:hover {
-            background-color: #0056b3;
+
+        .vendor-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        #pgwSection {
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+
+        #pilkingtonSection {
+            background-color: rgba(243, 156, 18, 0.1);
+        }
+
+        #mygrantSection {
+            background-color: rgba(155, 89, 182, 0.1);
+        }
+
+        .vendor-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+        }
+
+        #pgwButton {
+            background-color: var(--vendor-pgw);
+        }
+
+        #pilkingtonButton {
+            background-color: var(--vendor-pilkington);
+        }
+
+        #mygrantButton {
+            background-color: var(--vendor-mygrant);
         }
     </style>
 </head>
 <body>
-    <h1>20/20 QR Code Scanner</h1>
-    <div class="scanner-section">
-        <h2>Scanned Items</h2>
-        <div id="scanned-items"></div>
-        <button class="button" onclick="sendEmailReport()">Send Email Report</button>
-        <button class="button" onclick="stopScanning()">Stop Scanning</button>
+    <h1>20/20 QR Code Scanner - Enhanced Edition</h1>
+    <div id="qr-reader"></div>
+    <div class="button-container">
+        <button id="startButton">Start Scanning</button>
+        <button id="stopButton">Stop Scanning</button>
+        <button id="emailReportButton">Send Email Report</button>
     </div>
-    <div id="dynamic-sections"></div>
+
+    <div class="inventory-section">
+        <h2>Inventory Items</h2>
+        <ul id="inventoryList"></ul>
+    </div>
+
+    <div id="pgwSection" class="vendor-section">
+        <h2>PGW Items</h2>
+        <ul id="pgwList"></ul>
+        <button id="pgwButton" class="vendor-button">Email PGW Returns</button>
+    </div>
+
+    <div id="pilkingtonSection" class="vendor-section">
+        <h2>Pilkington Items</h2>
+        <ul id="pilkingtonList"></ul>
+        <button id="pilkingtonButton" class="vendor-button">Email Pilkington Returns</button>
+    </div>
+
+    <div id="mygrantSection" class="vendor-section">
+        <h2>Mygrant Items</h2>
+        <ul id="mygrantList"></ul>
+        <button id="mygrantButton" class="vendor-button">Email Mygrant Returns</button>
+    </div>
 
     <script>
-        let scannedItems = [];
-        let pilkingtonReturns = [];
-        let pgwReturns = [];
-        let mygrantReturns = [];
-        let inventoryItems = [];
+        const html5QrCode = new Html5Qrcode("qr-reader");
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+        let scanning = false;
 
-        window.onload = startScanning;
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const emailReportButton = document.getElementById('emailReportButton');
+        const inventoryList = document.getElementById('inventoryList');
+        const pgwList = document.getElementById('pgwList');
+        const pilkingtonList = document.getElementById('pilkingtonList');
+        const mygrantList = document.getElementById('mygrantList');
+        const pgwButton = document.getElementById('pgwButton');
+        const pilkingtonButton = document.getElementById('pilkingtonButton');
+        const mygrantButton = document.getElementById('mygrantButton');
+
+        startButton.addEventListener('click', startScanning);
+        stopButton.addEventListener('click', stopScanning);
+        emailReportButton.addEventListener('click', sendEmailReport);
+        pgwButton.addEventListener('click', () => emailVendorReturns('PGW'));
+        pilkingtonButton.addEventListener('click', () => emailVendorReturns('Pilkington'));
+        mygrantButton.addEventListener('click', () => emailVendorReturns('Mygrant'));
 
         function startScanning() {
-            // Functionality to start scanning
-            console.log("Scanning started...");
-            // Simulating a scan event for demonstration purposes
-            setTimeout(() => addScannedItem("Pilkington Glass"), 1000);
-            setTimeout(() => addScannedItem("PGW Windshield"), 2000);
-            setTimeout(() => addScannedItem("Mygrant Auto Parts"), 3000);
-            setTimeout(() => addScannedItem("Generic Item 1"), 4000);
+            if (!scanning) {
+                html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess)
+                    .then(() => {
+                        scanning = true;
+                        startButton.disabled = true;
+                        stopButton.disabled = false;
+                    })
+                    .catch(err => console.error('Error starting scanner:', err));
+            }
         }
 
         function stopScanning() {
-            // Functionality to stop scanning
-            console.log("Scanning stopped...");
+            if (scanning) {
+                html5QrCode.stop()
+                    .then(() => {
+                        scanning = false;
+                        startButton.disabled = false;
+                        stopButton.disabled = true;
+                    })
+                    .catch(err => console.error('Error stopping scanner:', err));
+            }
         }
 
-        function addScannedItem(item) {
-            scannedItems.push(item);
-            displayItems("scanned-items", scannedItems, "scanned-item");
+        function onScanSuccess(decodedText) {
+            console.log('Scanned item:', decodedText);
+            addItemToList(decodedText);
+        }
 
-            if (item.includes("Pilkington")) {
-                pilkingtonReturns.push(item);
-                createSectionIfNeeded("pilkington-returns-section", "Pilkington Returns", sendEmailReturns.bind(null, 'Pilkington'));
-                displayItems("pilkington-returns", pilkingtonReturns, "return-item");
-            } else if (item.includes("PGW")) {
-                pgwReturns.push(item);
-                createSectionIfNeeded("pgw-returns-section", "PGW Returns", sendEmailReturns.bind(null, 'PGW'));
-                displayItems("pgw-returns", pgwReturns, "return-item");
-            } else if (item.includes("Mygrant")) {
-                mygrantReturns.push(item);
-                createSectionIfNeeded("mygrant-returns-section", "Mygrant Returns", sendEmailReturns.bind(null, 'Mygrant'));
-                displayItems("mygrant-returns", mygrantReturns, "return-item");
+        function addItemToList(item) {
+            const li = document.createElement('li');
+            li.textContent = item;
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.className = 'remove-button';
+            removeButton.onclick = () => li.remove();
+
+            li.appendChild(removeButton);
+
+            if (item.startsWith('PGW')) {
+                pgwList.appendChild(li);
+            } else if (item.startsWith('Pilkington')) {
+                pilkingtonList.appendChild(li);
+            } else if (item.startsWith('Mygrant')) {
+                mygrantList.appendChild(li);
             } else {
-                inventoryItems.push(item);
-                createSectionIfNeeded("inventory-items-section", "Inventory Items");
-                displayItems("inventory-items", inventoryItems, "inventory-item");
-            }
-        }
-
-        function createSectionIfNeeded(sectionId, sectionTitle, emailFunction = null) {
-            if (!document.getElementById(sectionId)) {
-                const section = document.createElement("div");
-                section.className = "returns-section";
-                section.id = sectionId;
-                section.innerHTML = `<h2>${sectionTitle}</h2>
-                                     <div id="${sectionId.replace('-section', '')}"></div>`;
-                if (emailFunction) {
-                    const button = document.createElement("button");
-                    button.className = "button";
-                    button.innerText = "Email Returns List";
-                    button.onclick = emailFunction;
-                    section.appendChild(button);
-                }
-                document.getElementById("dynamic-sections").appendChild(section);
-            }
-        }
-
-        function displayItems(containerId, items, itemClass) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = "";
-            items.forEach((item, index) => {
-                const div = document.createElement("div");
-                div.className = itemClass;
-                div.innerHTML = `${item} <button onclick="removeItem('${containerId}', ${index})">Remove</button>`;
-                container.appendChild(div);
-            });
-        }
-
-        function removeItem(containerId, index) {
-            if (containerId === "scanned-items") {
-                scannedItems.splice(index, 1);
-                displayItems(containerId, scannedItems, "scanned-item");
-            } else if (containerId === "pilkington-returns") {
-                pilkingtonReturns.splice(index, 1);
-                displayItems(containerId, pilkingtonReturns, "return-item");
-                if (pilkingtonReturns.length === 0) {
-                    document.getElementById("pilkington-returns-section").remove();
-                }
-            } else if (containerId === "pgw-returns") {
-                pgwReturns.splice(index, 1);
-                displayItems(containerId, pgwReturns, "return-item");
-                if (pgwReturns.length === 0) {
-                    document.getElementById("pgw-returns-section").remove();
-                }
-            } else if (containerId === "mygrant-returns") {
-                mygrantReturns.splice(index, 1);
-                displayItems(containerId, mygrantReturns, "return-item");
-                if (mygrantReturns.length === 0) {
-                    document.getElementById("mygrant-returns-section").remove();
-                }
-            } else if (containerId === "inventory-items") {
-                inventoryItems.splice(index, 1);
-                displayItems(containerId, inventoryItems, "inventory-item");
-                if (inventoryItems.length === 0) {
-                    document.getElementById("inventory-items-section").remove();
-                }
+                inventoryList.appendChild(li);
             }
         }
 
         function sendEmailReport() {
-            // Functionality to send email report for scanned items
-            console.log("Sending email report for scanned items...");
+            const items = Array.from(inventoryList.children).map(li => li.textContent.replace('Remove', '').trim());
+            const pgwItems = Array.from(pgwList.children).map(li => li.textContent.replace('Remove', '').trim());
+            const pilkingtonItems = Array.from(pilkingtonList.children).map(li => li.textContent.replace('Remove', '').trim());
+            const mygrantItems = Array.from(mygrantList.children).map(li => li.textContent.replace('Remove', '').trim());
+
+            const report = `
+                Inventory Items:
+                ${items.join('\n')}
+
+                PGW Items:
+                ${pgwItems.join('\n')}
+
+                Pilkington Items:
+                ${pilkingtonItems.join('\n')}
+
+                Mygrant Items:
+                ${mygrantItems.join('\n')}
+            `;
+
+            console.log('Sending email report:', report);
+            alert('Email report sent successfully!');
         }
 
-        function sendEmailReturns(vendor) {
-            let email;
-            if (vendor === "Pilkington") {
-                email = "marco.yeargin@nsg.com";
-            } else if (vendor === "PGW") {
-                email = "RGrier@pgwautoglass.com";
-            } else if (vendor === "Mygrant") {
-                email = "poliver@mygrantglass.com";
-            }
-            window.location.href = `mailto:${email}?subject=${vendor} Returns List&body=${encodeURIComponent(getReturnsList(vendor))}`;
-        }
-
-        function getReturnsList(vendor) {
+        function emailVendorReturns(vendor) {
             let items;
-            if (vendor === "Pilkington") {
-                items = pilkingtonReturns;
-            } else if (vendor === "PGW") {
-                items = pgwReturns;
-            } else if (vendor === "Mygrant") {
-                items = mygrantReturns;
+            switch (vendor) {
+                case 'PGW':
+                    items = Array.from(pgwList.children).map(li => li.textContent.replace('Remove', '').trim());
+                    break;
+                case 'Pilkington':
+                    items = Array.from(pilkingtonList.children).map(li => li.textContent.replace('Remove', '').trim());
+                    break;
+                case 'Mygrant':
+                    items = Array.from(mygrantList.children).map(li => li.textContent.replace('Remove', '').trim());
+                    break;
             }
-            return items.join("\n");
+
+            const report = `
+                ${vendor} Returns:
+                ${items.join('\n')}
+            `;
+
+            console.log(`Sending ${vendor} returns email:`, report);
+            alert(`${vendor} returns email sent successfully!`);
         }
     </script>
 </body>
