@@ -14,6 +14,7 @@
             --vendor-pgw: #e74c3c;
             --vendor-pilkington: #f39c12;
             --vendor-mygrant: #9b59b6;
+            --vendor-other: #1abc9c;
         }
 
         body {
@@ -77,12 +78,12 @@
             display: none;
         }
 
-        #inventoryList, #pgwList, #pilkingtonList, #mygrantList {
+        #inventoryList, .vendor-list {
             list-style-type: none;
             padding: 0;
         }
 
-        #inventoryList li, #pgwList li, #pilkingtonList li, #mygrantList li {
+        #inventoryList li, .vendor-list li {
             background-color: white;
             margin-bottom: 10px;
             padding: 10px;
@@ -107,16 +108,8 @@
             margin-left: 10px;
         }
 
-        #pgwSection {
-            background-color: rgba(231, 76, 60, 0.1);
-        }
-
-        #pilkingtonSection {
-            background-color: rgba(243, 156, 18, 0.1);
-        }
-
-        #mygrantSection {
-            background-color: rgba(155, 89, 182, 0.1);
+        .vendor-section {
+            background-color: rgba(52, 152, 219, 0.1);
         }
 
         .vendor-button {
@@ -127,18 +120,7 @@
             border-radius: 3px;
             color: white;
             cursor: pointer;
-        }
-
-        #pgwButton {
-            background-color: var(--vendor-pgw);
-        }
-
-        #pilkingtonButton {
-            background-color: var(--vendor-pilkington);
-        }
-
-        #mygrantButton {
-            background-color: var(--vendor-mygrant);
+            background-color: var(--primary-color);
         }
 
         #notification {
@@ -172,24 +154,6 @@
         <ul id="inventoryList"></ul>
     </div>
 
-    <div id="pgwSection" class="vendor-section">
-        <h2>PGW Returns</h2>
-        <ul id="pgwList"></ul>
-        <button id="pgwButton" class="vendor-button">Email PGW Returns</button>
-    </div>
-
-    <div id="pilkingtonSection" class="vendor-section">
-        <h2>Pilkington Returns</h2>
-        <ul id="pilkingtonList"></ul>
-        <button id="pilkingtonButton" class="vendor-button">Email Pilkington Returns</button>
-    </div>
-
-    <div id="mygrantSection" class="vendor-section">
-        <h2>Mygrant Returns</h2>
-        <ul id="mygrantList"></ul>
-        <button id="mygrantButton" class="vendor-button">Email Mygrant Returns</button>
-    </div>
-
     <div id="notification">Item Scanned!</div>
 
     <script>
@@ -200,22 +164,19 @@
         const stopButton = document.getElementById('stopButton');
         const emailReportButton = document.getElementById('emailReportButton');
         const inventoryList = document.getElementById('inventoryList');
-        const pgwList = document.getElementById('pgwList');
-        const pilkingtonList = document.getElementById('pilkingtonList');
-        const mygrantList = document.getElementById('mygrantList');
-        const pgwButton = document.getElementById('pgwButton');
-        const pilkingtonButton = document.getElementById('pilkingtonButton');
-        const mygrantButton = document.getElementById('mygrantButton');
         const notification = document.getElementById('notification');
 
         const scannedItems = new Set();
         let audioContext;
+        const vendorSections = {};
+        const vendorEmails = {
+            'PGW': 'RGrier@pgwautoglass.com',
+            'Pilkington': ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], // Including CC
+            'Mygrant': 'poliver@mygrantglass.com'
+        };
 
         stopButton.addEventListener('click', stopScanning);
         emailReportButton.addEventListener('click', sendEmailReport);
-        pgwButton.addEventListener('click', () => emailVendorReturns('PGW'));
-        pilkingtonButton.addEventListener('click', () => emailVendorReturns('Pilkington'));
-        mygrantButton.addEventListener('click', () => emailVendorReturns('Mygrant'));
 
         window.addEventListener('load', initScanner);
 
@@ -267,6 +228,11 @@
         }
 
         function addItemToList(item) {
+            const lines = item.split('\n');
+            const firstLine = lines[0].trim();
+            const isReturn = firstLine.includes('Return');
+            let vendor = isReturn ? firstLine.split(' ')[0] : null;
+
             const li = document.createElement('li');
             const itemContent = document.createElement('span');
             itemContent.className = 'item-content';
@@ -284,58 +250,66 @@
             li.appendChild(itemContent);
             li.appendChild(removeButton);
 
-            if (item.startsWith('PGW')) {
-                pgwList.appendChild(li);
-                document.getElementById('pgwSection').style.display = 'block';
-            } else if (item.startsWith('Pilkington')) {
-                pilkingtonList.appendChild(li);
-                document.getElementById('pilkingtonSection').style.display = 'block';
-            } else if (item.startsWith('Mygrant')) {
-                mygrantList.appendChild(li);
-                document.getElementById('mygrantSection').style.display = 'block';
+            if (isReturn) {
+                if (!vendorSections[vendor]) {
+                    createVendorSection(vendor);
+                }
+                vendorSections[vendor].list.appendChild(li);
+                vendorSections[vendor].section.style.display = 'block';
             } else {
                 inventoryList.appendChild(li);
                 document.getElementById('inventorySection').style.display = 'block';
             }
         }
 
-        function updateVendorSectionVisibility() {
-            const sections = [
-                { id: 'pgwSection', list: pgwList },
-                { id: 'pilkingtonSection', list: pilkingtonList },
-                { id: 'mygrantSection', list: mygrantList },
-                { id: 'inventorySection', list: inventoryList }
-            ];
+        function createVendorSection(vendor) {
+            const section = document.createElement('div');
+            section.id = `${vendor}Section`;
+            section.className = 'vendor-section';
 
-            sections.forEach(section => {
-                const sectionElement = document.getElementById(section.id);
-                if (section.list.children.length === 0) {
-                    sectionElement.style.display = 'none';
-                } else {
-                    sectionElement.style.display = 'block';
-                }
-            });
+            const h2 = document.createElement('h2');
+            h2.textContent = `${vendor} Returns`;
+            section.appendChild(h2);
+
+            const list = document.createElement('ul');
+            list.id = `${vendor}List`;
+            list.className = 'vendor-list';
+            section.appendChild(list);
+
+            const button = document.createElement('button');
+            button.id = `${vendor}Button`;
+            button.className = 'vendor-button';
+            button.textContent = `Email ${vendor} Returns`;
+            button.onclick = () => emailVendorReturns(vendor);
+            section.appendChild(button);
+
+            document.body.appendChild(section);
+
+            vendorSections[vendor] = { section, list, button };
+        }
+
+        function updateVendorSectionVisibility() {
+            document.getElementById('inventorySection').style.display = 
+                inventoryList.children.length > 0 ? 'block' : 'none';
+
+            for (const vendor in vendorSections) {
+                vendorSections[vendor].section.style.display = 
+                    vendorSections[vendor].list.children.length > 0 ? 'block' : 'none';
+            }
         }
 
         function sendEmailReport() {
-            const items = Array.from(inventoryList.children).map(li => li.querySelector('.item-content').textContent);
-            const pgwItems = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
-            const pilkingtonItems = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
-            const mygrantItems = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
+            let report = 'Inventory Items:\n';
+            report += Array.from(inventoryList.children)
+                .map(li => li.querySelector('.item-content').textContent)
+                .join('\n\n');
 
-            const report = `
-                Inventory Items:
-                ${items.join('\n\n')}
-
-                PGW Returns:
-                ${pgwItems.join('\n\n')}
-
-                Pilkington Returns:
-                ${pilkingtonItems.join('\n\n')}
-
-                Mygrant Returns:
-                ${mygrantItems.join('\n\n')}
-            `;
+            for (const vendor in vendorSections) {
+                report += `\n\n${vendor} Returns:\n`;
+                report += Array.from(vendorSections[vendor].list.children)
+                    .map(li => li.querySelector('.item-content').textContent)
+                    .join('\n\n');
+            }
 
             const subject = encodeURIComponent('Scan Report');
             const body = encodeURIComponent(report);
@@ -343,32 +317,23 @@
         }
 
         function emailVendorReturns(vendor) {
-            let items, email, subject;
-            switch (vendor) {
-                case 'PGW':
-                    items = Array.from(pgwList.children).map(li => li.querySelector('.item-content').textContent);
-                    email = 'RGrier@pgwautoglass.com';
-                    subject = 'PGW Returns';
-                    break;
-                case 'Pilkington':
-                    items = Array.from(pilkingtonList.children).map(li => li.querySelector('.item-content').textContent);
-                    email = 'marco.yeargin@nsg.com';
-                    subject = 'Pilkington Returns';
-                    break;
-                case 'Mygrant':
-                    items = Array.from(mygrantList.children).map(li => li.querySelector('.item-content').textContent);
-                    email = 'poliver@mygrantglass.com';
-                    subject = 'Mygrant Returns';
-                    break;
+            const items = Array.from(vendorSections[vendor].list.children)
+                .map(li => li.querySelector('.item-content').textContent);
+        
+            const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}`;
+        
+            const subject = encodeURIComponent(`${vendor} Returns`);
+            const body = encodeURIComponent(report);
+            let email = vendorEmails[vendor];
+            let ccEmail = '';
+        
+            // Check if the email field has multiple entries and set the CC parameter
+            if (Array.isArray(email)) {
+                ccEmail = `&cc=${encodeURIComponent(email[1])}`; // Set the CC email
+                email = email[0]; // Update the main email
             }
-
-            const report = `These items are labeled and ready to be picked up in our return area:
-
-${items.join('\n\n')}`;
-
-            const encodedSubject = encodeURIComponent(subject);
-            const encodedBody = encodeURIComponent(report);
-            window.location.href = `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}`;
+        
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
         }
 
         function initAudio() {
