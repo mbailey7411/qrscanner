@@ -145,7 +145,7 @@
     <h1>20/20 QR Scanner</h1>
     <div id="qr-reader"></div>
     <div class="button-container">
-        <button id="stopButton" disabled>Stop Scanning</button>
+        <button id="stopButton" disabled>Start Scanning</button>
         <button id="emailReportButton">Send Email Report</button>
     </div>
 
@@ -171,21 +171,18 @@
         const vendorSections = {};
         const vendorEmails = {
             'PGW': 'RGrier@pgwautoglass.com',
-            'Pilkington': ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], // Including CC
+            'Pilkington': ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'],
             'Mygrant': 'poliver@mygrantglass.com'
         };
 
-        stopButton.addEventListener('click', stopScanning);
-        emailReportButton.addEventListener('click', sendEmailReport);
-
-        window.addEventListener('load', () => {
-            stopButton.addEventListener('click', startScanning); // Initially, the button should start scanning
+        stopButton.addEventListener('click', function() {
+            if (scanning) {
+                stopScanning();
+            } else {
+                startScanning();
+            }
         });
-
-        function initScanner() {
-            startScanning();
-            document.addEventListener('click', initAudio, { once: true });
-        }
+        emailReportButton.addEventListener('click', sendEmailReport);
 
         function startScanning() {
             if (!scanning) {
@@ -197,9 +194,7 @@
                 ).then(() => {
                     scanning = true;
                     stopButton.disabled = false;
-                    stopButton.textContent = 'Stop Scanning'; // Change button text back to "Stop Scanning"
-                    stopButton.removeEventListener('click', startScanning); // Remove the start scanning event
-                    stopButton.addEventListener('click', stopScanning); // Add the stop scanning event
+                    stopButton.textContent = 'Stop Scanning';
                 }).catch(err => {
                     console.error('Error starting scanner:', err);
                     alert('Failed to start the scanner. Please make sure you have given camera permissions and try again.');
@@ -212,9 +207,7 @@
                 html5QrCode.stop().then(() => {
                     scanning = false;
                     stopButton.disabled = false;
-                    stopButton.textContent = 'Start Scanning'; // Change button text to "Start Scanning"
-                    stopButton.removeEventListener('click', stopScanning); // Remove the stop scanning event
-                    stopButton.addEventListener('click', startScanning); // Add the start scanning event
+                    stopButton.textContent = 'Start Scanning';
                 }).catch(err => console.error('Error stopping scanner:', err));
             }
         }
@@ -297,80 +290,62 @@
         }
 
         function updateVendorSectionVisibility() {
-            document.getElementById('inventorySection').style.display = 
-                inventoryList.children.length > 0 ? 'block' : 'none';
+            document.getElementById('inventorySection').style.display = inventoryList.children.length > 0 ? 'block' : 'none';
 
             for (const vendor in vendorSections) {
-                vendorSections[vendor].section.style.display = 
-                    vendorSections[vendor].list.children.length > 0 ? 'block' : 'none';
-            }
-        }
-
-        function sendEmailReport() {
-            let report = 'Inventory Items:\n';
-            report += Array.from(inventoryList.children)
+                vendorSections[vendor].section.style.display = vendorSections[vendor].list.children​⬤
+                        for (const vendor in vendorSections) {
+            report += `\n\n${vendor} Returns:\n`;
+            report += Array.from(vendorSections[vendor].list.children)
                 .map(li => li.querySelector('.item-content').textContent)
                 .join('\n\n');
-
-            for (const vendor in vendorSections) {
-                report += `\n\n${vendor} Returns:\n`;
-                report += Array.from(vendorSections[vendor].list.children)
-                    .map(li => li.querySelector('.item-content').textContent)
-                    .join('\n\n');
-            }
-
-            const subject = encodeURIComponent('Scan Report');
-            const body = encodeURIComponent(report);
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
         }
 
-        function emailVendorReturns(vendor) {
-            const items = Array.from(vendorSections[vendor].list.children)
-                .map(li => li.querySelector('.item-content').textContent);
+        const subject = encodeURIComponent('Scan Report');
+        const body = encodeURIComponent(report);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    function emailVendorReturns(vendor) {
+        const items = Array.from(vendorSections[vendor].list.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}`;
+
+        const subject = encodeURIComponent(`${vendor} Returns`);
+        const body = encodeURIComponent(report);
+        let emails = vendorEmails[vendor];
+        let email = Array.isArray(emails) ? emails[0] : emails;
+        let ccEmail = Array.isArray(emails) && emails.length > 1 ? `&cc=${encodeURIComponent(emails.slice(1).join(','))}` : '';
+
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
+    }
+
+    function initAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playBeep() {
+        if (!audioContext) initAudio();
         
-            const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}`;
-        
-            const subject = encodeURIComponent(`${vendor} Returns`);
-            const body = encodeURIComponent(report);
-            let email = vendorEmails[vendor];
-            let ccEmail = '';
-        
-            // Check if the email field has multiple entries and set the CC parameter
-            if (Array.isArray(email)) {
-                ccEmail = `&cc=${encodeURIComponent(email[1])}`; // Set the CC email
-                email = email[0]; // Update the main email
-            }
-        
-            window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
-        }
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-        function initAudio() {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
 
-        function playBeep() {
-            if (!audioContext) initAudio();
-            
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+    }
 
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.1);
-        }
-
-        function showNotification() {
-            notification.style.display = 'block';
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 2000);
-        }
-    </script>
-</body>
-</html>
+    function showNotification() {
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 2000);
+    }
+</script>
