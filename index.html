@@ -171,7 +171,7 @@
         const vendorSections = {};
         const vendorEmails = {
             'PGW': 'RGrier@pgwautoglass.com',
-            'Pilkington': 'marco.yeargin@nsg.com',
+            'Pilkington': ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], // Including CC
             'Mygrant': 'poliver@mygrantglass.com'
         };
 
@@ -319,15 +319,21 @@
         function emailVendorReturns(vendor) {
             const items = Array.from(vendorSections[vendor].list.children)
                 .map(li => li.querySelector('.item-content').textContent);
-
-            const report = `These items are labeled and ready to be picked up in our return area:
-
-${items.join('\n\n')}`;
-
+        
+            const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}`;
+        
             const subject = encodeURIComponent(`${vendor} Returns`);
             const body = encodeURIComponent(report);
-            const email = vendorEmails[vendor] || '';
-            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            let email = vendorEmails[vendor];
+            let ccEmail = '';
+        
+            // Check if the email field has multiple entries and set the CC parameter
+            if (Array.isArray(email)) {
+                ccEmail = `&cc=${encodeURIComponent(email[1])}`; // Set the CC email
+                email = email[0]; // Update the main email
+            }
+        
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
         }
 
         function initAudio() {
