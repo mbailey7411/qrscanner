@@ -178,7 +178,9 @@
         stopButton.addEventListener('click', stopScanning);
         emailReportButton.addEventListener('click', sendEmailReport);
 
-        window.addEventListener('load', initScanner);
+        window.addEventListener('load', () => {
+            stopButton.addEventListener('click', startScanning); // Initially, the button should start scanning
+        });
 
         function initScanner() {
             startScanning();
@@ -195,6 +197,9 @@
                 ).then(() => {
                     scanning = true;
                     stopButton.disabled = false;
+                    stopButton.textContent = 'Stop Scanning'; // Change button text back to "Stop Scanning"
+                    stopButton.removeEventListener('click', startScanning); // Remove the start scanning event
+                    stopButton.addEventListener('click', stopScanning); // Add the stop scanning event
                 }).catch(err => {
                     console.error('Error starting scanner:', err);
                     alert('Failed to start the scanner. Please make sure you have given camera permissions and try again.');
@@ -206,7 +211,10 @@
             if (scanning) {
                 html5QrCode.stop().then(() => {
                     scanning = false;
-                    stopButton.disabled = true;
+                    stopButton.disabled = false;
+                    stopButton.textContent = 'Start Scanning'; // Change button text to "Start Scanning"
+                    stopButton.removeEventListener('click', stopScanning); // Remove the stop scanning event
+                    stopButton.addEventListener('click', startScanning); // Add the start scanning event
                 }).catch(err => console.error('Error stopping scanner:', err));
             }
         }
