@@ -42,7 +42,7 @@
 
         .button-container {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             gap: 10px;
             margin-bottom: 20px;
         }
@@ -66,20 +66,29 @@
             color: white;
         }
 
-        #emailReportButton, #inventoryEmailButton, #inventorySmsButton {
+        #emailReportButton {
             background-color: var(--primary-color);
             color: white;
         }
 
-        #inventorySmsButton {
+        .email-button {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .sms-button {
             background-color: var(--secondary-color);
+            color: white;
+            margin-left: auto;
         }
 
         .inventory-section, .vendor-section {
             width: 100%;
             max-width: 500px;
             margin-top: 20px;
-            display: none;
+            padding: 10px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border-radius: 5px;
         }
 
         #inventoryList, .vendor-list {
@@ -110,29 +119,6 @@
             border-radius: 3px;
             cursor: pointer;
             margin-left: 10px;
-        }
-
-        .vendor-section {
-            background-color: rgba(52, 152, 219, 0.1);
-        }
-
-        .vendor-button {
-            margin-top: 10px;
-            padding: 8px 16px;
-            font-size: 14px;
-            border: none;
-            border-radius: 3px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .email-button {
-            background-color: var(--primary-color);
-        }
-
-        .sms-button {
-            background-color: var(--secondary-color);
-            margin-left: auto;
         }
 
         .vendor-button-container {
@@ -190,8 +176,8 @@
         <h2>Inventory Items</h2>
         <ul id="inventoryList"></ul>
         <div class="button-container">
-            <button id="inventoryEmailButton" aria-label="Email Inventory Report">Email Inventory Report</button>
-            <button id="inventorySmsButton" aria-label="SMS Inventory Report">SMS Inventory Report</button>
+            <button id="inventoryEmailButton" class="email-button" aria-label="Email Inventory Report">Email Inventory Report</button>
+            <button id="inventorySmsButton" class="sms-button" aria-label="SMS Inventory Report">SMS Inventory Report</button>
         </div>
     </div>
 
@@ -299,7 +285,7 @@
             li.appendChild(removeButton);
 
             if (isReturn) {
-                if (!vendorSections[vendor]) {
+                                if (!vendorSections[vendor]) {
                     createVendorSection(vendor);
                 }
                 vendorSections[vendor].list.appendChild(li);
@@ -417,12 +403,12 @@
         function smsVendorReturns(vendor) {
             const items = Array.from(vendorSections[vendor].list.children)
                 .map(li => li.querySelector('.item-content').textContent);
-        
+
             const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-        
+
             const smsNumbers = vendorContacts[vendor].sms;
             const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
-        
+
             window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
         }
 
