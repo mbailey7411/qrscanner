@@ -356,7 +356,7 @@
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
 
-        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+        const report = `These items are labeled and ready to be picked up in our return area:\n${items.join('\n\n')}\n20/20 Auto Glass`;
 
         const subject = encodeURIComponent(`${vendor} Returns`);
         const body = encodeURIComponent(report);
@@ -375,7 +375,7 @@
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
 
-        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+        const report = `These items are labeled and ready to be picked up in our return area:\n${items.join('\n\n')}\n20/20 Auto Glass`;
 
         const smsNumbers = vendorContacts[vendor].sms;
         const smsNumber = Array.isArray(smsNumbers) ? smsNumbers[0] : smsNumbers;
