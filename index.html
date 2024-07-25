@@ -417,13 +417,13 @@
         function smsVendorReturns(vendor) {
             const items = Array.from(vendorSections[vendor].list.children)
                 .map(li => li.querySelector('.item-content').textContent);
-
+        
             const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
+        
             const smsNumbers = vendorContacts[vendor].sms;
-            const smsNumber = Array.isArray(smsNumbers) ? smsNumbers[0] : smsNumbers;
-
-            window.location.href = `sms:${smsNumber}?body=${encodeURIComponent(report)}`;
+            const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
+        
+            window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
         }
 
         function initAudio() {
