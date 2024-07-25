@@ -371,21 +371,25 @@
         }
 
         function sendEmailReport() {
-            let report = 'Inventory Items:';
+            let report = 'Inventory Items:\n\n';
             report += Array.from(inventoryList.children)
                 .map(li => li.querySelector('.item-content').textContent)
                 .join('\n\n');
-
+        
             for (const vendor in vendorSections) {
-                report += Array.from(vendorSections[vendor].list.children)
-                    .map(li => li.querySelector('.item-content').textContent)
-                    .join('\n\n');
+                if (vendorSections[vendor].list.children.length > 0) {
+                    report += `\n\n${vendor} Returns:\n\n`;
+                    report += Array.from(vendorSections[vendor].list.children)
+                        .map(li => li.querySelector('.item-content').textContent)
+                        .join('\n\n');
             }
-
-            const subject = encodeURIComponent('Scan Report');
-            const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
         }
+
+    const subject = encodeURIComponent('Scan Report');
+    const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
 
         function sendInventoryEmailReport() {
             const items = Array.from(inventoryList.children)
