@@ -371,13 +371,12 @@
         }
 
         function sendEmailReport() {
-            let report = 'Inventory Items:\n';
+            let report = 'Inventory Items:';
             report += Array.from(inventoryList.children)
                 .map(li => li.querySelector('.item-content').textContent)
                 .join('\n\n');
 
             for (const vendor in vendorSections) {
-                report += `\n\n${vendor} Returns:\n`;
                 report += Array.from(vendorSections[vendor].list.children)
                     .map(li => li.querySelector('.item-content').textContent)
                     .join('\n\n');
