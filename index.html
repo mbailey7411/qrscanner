@@ -392,7 +392,7 @@
             const items = Array.from(inventoryList.children)
                 .map(li => li.querySelector('.item-content').textContent);
 
-            const report = `Inventory Items:\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+            const report = `Inventory Items:\n${items.join('\n')}\n\n20/20 Auto Glass`;
 
             const subject = encodeURIComponent('Inventory Report');
             const body = encodeURIComponent(report);
