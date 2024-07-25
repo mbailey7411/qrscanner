@@ -42,7 +42,7 @@
 
         .button-container {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
         }
@@ -89,6 +89,7 @@
             padding: 10px;
             background-color: rgba(52, 152, 219, 0.1);
             border-radius: 5px;
+            display: none;
         }
 
         #inventoryList, .vendor-list {
@@ -195,6 +196,7 @@
         const inventorySmsButton = document.getElementById('inventorySmsButton');
         const inventoryList = document.getElementById('inventoryList');
         const notification = document.getElementById('notification');
+        const inventorySection = document.getElementById('inventorySection');
 
         const scannedItems = new Set();
         let audioContext;
@@ -288,157 +290,157 @@
                 if (!vendorSections[vendor]) {
                     createVendorSection(vendor);
                 }
-            vendorSections[vendor].list.appendChild(li);
-            vendorSections[vendor].section.style.display = ‘block’;
+                vendorSections[vendor].list.appendChild(li);
+                vendorSections[vendor].section.style.display = 'block';
             } else {
                 inventoryList.appendChild(li);
-                document.getElementById(‘inventorySection’).style.display = ‘block’;
+                inventorySection.style.display = 'block';
             }
         }
 
-            function createVendorSection(vendor) {
-        const section = document.createElement('div');
-        section.id = `${vendor}Section`;
-        section.className = 'vendor-section';
+        function createVendorSection(vendor) {
+            const section = document.createElement('div');
+            section.id = `${vendor}Section`;
+            section.className = 'vendor-section';
 
-        const h2 = document.createElement('h2');
-        h2.textContent = `${vendor} Returns`;
-        section.appendChild(h2);
+            const h2 = document.createElement('h2');
+            h2.textContent = `${vendor} Returns`;
+            section.appendChild(h2);
 
-        const list = document.createElement('ul');
-        list.id = `${vendor}List`;
-        list.className = 'vendor-list';
-        section.appendChild(list);
+            const list = document.createElement('ul');
+            list.id = `${vendor}List`;
+            list.className = 'vendor-list';
+            section.appendChild(list);
 
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'vendor-button-container';
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'vendor-button-container';
 
-        const emailButton = document.createElement('button');
-        emailButton.id = `${vendor}EmailButton`;
-        emailButton.className = 'vendor-button email-button';
-        emailButton.textContent = `Email ${vendor} Returns`;
-        emailButton.onclick = () => emailVendorReturns(vendor);
-        buttonContainer.appendChild(emailButton);
+            const emailButton = document.createElement('button');
+            emailButton.id = `${vendor}EmailButton`;
+            emailButton.className = 'vendor-button email-button';
+            emailButton.textContent = `Email ${vendor} Returns`;
+            emailButton.onclick = () => emailVendorReturns(vendor);
+            buttonContainer.appendChild(emailButton);
 
-        const smsButton = document.createElement('button');
-        smsButton.id = `${vendor}SmsButton`;
-        smsButton.className = 'vendor-button sms-button';
-        smsButton.textContent = `SMS ${vendor} Returns`;
-        smsButton.onclick = () => smsVendorReturns(vendor);
-        buttonContainer.appendChild(smsButton);
+            const smsButton = document.createElement('button');
+            smsButton.id = `${vendor}SmsButton`;
+            smsButton.className = 'vendor-button sms-button';
+            smsButton.textContent = `SMS ${vendor} Returns`;
+            smsButton.onclick = () => smsVendorReturns(vendor);
+            buttonContainer.appendChild(smsButton);
 
-        section.appendChild(buttonContainer);
-        document.body.appendChild(section);
+            section.appendChild(buttonContainer);
+            document.body.appendChild(section);
 
-        vendorSections[vendor] = { section, list, emailButton, smsButton };
-    }
-
-    function updateVendorSectionVisibility() {
-        document.getElementById('inventorySection').style.display =
-            inventoryList.children.length > 0 ? 'block' : 'none';
-
-        for (const vendor in vendorSections) {
-            vendorSections[vendor].section.style.display =
-                vendorSections[vendor].list.children.length > 0 ? 'block' : 'none';
+            vendorSections[vendor] = { section, list, emailButton, smsButton };
         }
-    }
 
-    function sendEmailReport() {
-        let report = 'Inventory Items:\n';
-        report += Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent)
-            .join('\n\n');
+        function updateVendorSectionVisibility() {
+            inventorySection.style.display =
+                inventoryList.children.length > 0 ? 'block' : 'none';
 
-        for (const vendor in vendorSections) {
-            report += `\n\n${vendor} Returns:\n`;
-            report += Array.from(vendorSections[vendor].list.children)
+            for (const vendor in vendorSections) {
+                vendorSections[vendor].section.style.display =
+                    vendorSections[vendor].list.children.length > 0 ? 'block' : 'none';
+            }
+        }
+
+        function sendEmailReport() {
+            let report = 'Inventory Items:\n';
+            report += Array.from(inventoryList.children)
                 .map(li => li.querySelector('.item-content').textContent)
                 .join('\n\n');
+
+            for (const vendor in vendorSections) {
+                report += `\n\n${vendor} Returns:\n`;
+                report += Array.from(vendorSections[vendor].list.children)
+                    .map(li => li.querySelector('.item-content').textContent)
+                    .join('\n\n');
+            }
+
+            const subject = encodeURIComponent('Scan Report');
+            const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
         }
 
-        const subject = encodeURIComponent('Scan Report');
-        const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
+        function sendInventoryEmailReport() {
+            const items = Array.from(inventoryList.children)
+                .map(li => li.querySelector('.item-content').textContent);
 
-    function sendInventoryEmailReport() {
-        const items = Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent);
+            const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        const subject = encodeURIComponent('Inventory Report');
-        const body = encodeURIComponent(report);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
-
-    function sendInventorySmsReport() {
-        const items = Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent);
-
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        window.location.href = `sms:?body=${encodeURIComponent(report)}`;
-    }
-
-    function emailVendorReturns(vendor) {
-        const items = Array.from(vendorSections[vendor].list.children)
-            .map(li => li.querySelector('.item-content').textContent);
-
-        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        const subject = encodeURIComponent(`${vendor} Returns`);
-        const body = encodeURIComponent(report);
-        let email = vendorContacts[vendor]?.email || '';
-        let ccEmail = '';
-
-        if (Array.isArray(email)) {
-            ccEmail = `&cc=${encodeURIComponent(email[1])}`;
-            email = email[0];
+            const subject = encodeURIComponent('Inventory Report');
+            const body = encodeURIComponent(report);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
         }
 
-        window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
-    }
+        function sendInventorySmsReport() {
+            const items = Array.from(inventoryList.children)
+                .map(li => li.querySelector('.item-content').textContent);
 
-    function smsVendorReturns(vendor) {
-        const items = Array.from(vendorSections[vendor].list.children)
-            .map(li => li.querySelector('.item-content').textContent);
+            const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
-        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+            window.location.href = `sms:?body=${encodeURIComponent(report)}`;
+        }
 
-        const smsNumbers = vendorContacts[vendor]?.sms || '';
-        const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
+        function emailVendorReturns(vendor) {
+            const items = Array.from(vendorSections[vendor].list.children)
+                .map(li => li.querySelector('.item-content').textContent);
 
-        window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
-    }
+            const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
-    function initAudio() {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
+            const subject = encodeURIComponent(`${vendor} Returns`);
+            const body = encodeURIComponent(report);
+            let email = vendorContacts[vendor]?.email || '';
+            let ccEmail = '';
 
-    function playBeep() {
-        if (!audioContext) initAudio();
+            if (Array.isArray(email)) {
+                ccEmail = `&cc=${encodeURIComponent(email[1])}`;
+                email = email[0];
+            }
 
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
+        }
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        function smsVendorReturns(vendor) {
+            const items = Array.from(vendorSections[vendor].list.children)
+                .map(li => li.querySelector('.item-content').textContent);
 
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.1);
-    }
+            const smsNumbers = vendorContacts[vendor]?.sms || '';
+            const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
 
-    function showNotification() {
-        notification.style.display = 'block';
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 2000);
-    }
-</script>
+            window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
+        }
+
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playBeep() {
+            if (!audioContext) initAudio();
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        function showNotification() {
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+    </script>
 </body>
 </html>
