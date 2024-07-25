@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20/20 QR Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --vendor-pgw: #e74c3c;
+            --vendor-pilkington: #f39c12;
+            --vendor-mygrant: #9b59b6;
+            --vendor-other: #1abc9c;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #qr-reader {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #stopButton, #startButton {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        #emailReportButton {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .inventory-section, .vendor-section {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        #inventoryList, .vendor-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #inventoryList li, .vendor-list li {
+            background-color: white;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .item-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .remove-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .vendor-section {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+
+        .vendor-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .email-button {
+            background-color: var(--primary-color);
+        }
+
+        .sms-button {
+            background-color: var(--secondary-color);
+        }
+
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            animation: fadeInOut 2s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            h1, h2 {
+                font-size: 24px;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+
+            #qr-reader {
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>20/20 QR Scanner</h1>
+    <div id="qr-reader"></div>
+    <div class="button-container">
+        <button id="startButton" disabled aria-label="Start Scanning">Start Scanning</button>
+        <button id="stopButton" aria-label="Stop Scanning">Stop Scanning</button>
+        <button id="emailReportButton" aria-label="Send Email Report">Send Email Report</button>
+    </div>
+
+    <div id="inventorySection" class="inventory-section">
+        <h2>Inventory Items</h2>
+        <ul id="inventoryList"></ul>
+    </div>
+
+    <div id="notification">Item Scanned!</div>
+
+    <script>
+        const html5QrCode = new Html5Qrcode("qr-reader");
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+        let scanning = false;
+
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const emailReportButton = document.getElementById('emailReportButton');
+        const inventoryList = document.getElementById('inventoryList');
+        const notification = document.getElementById('notification');
+
+        const scannedItems = new Set();
+        let audioContext;
+        const vendorSections = {};
+        const vendorContacts = {
+            'PGW': { email: 'RGrier@pgwautoglass.com', sms: '8645057843' },
+            'Pilkington': { email: ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], sms: ['8643039699', '8642010487'] },
+            'Mygrant': { email: 'poliver@mygrantglass.com', sms: '7045176639' }
+        };
+
+        stopButton.addEventListener('click', stopScanning);
+        startButton.addEventListener('click', startScanning);
+        emailReportButton.addEventListener('click', sendEmailReport);
+
+        window.addEventListener('load', initScanner);
+
+        function initScanner() {
+            startScanning();
+            document.addEventListener('click', initAudio, { once: true });
+        }
+
+        function startScanning() {
+            if (!scanning) {
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    qrConfig,
+                    onScanSuccess,
+                    onScanError
+                ).then(() => {
+                    scanning = true;
+                    stopButton.disabled = false;
+                    startButton.disabled = true;
+                }).catch(err => {
+                    console.error('Error starting scanner:', err);
+                });
+            }
+        }
+
+        function stopScanning() {
+            if (scanning) {
+                html5QrCode.stop().then(() => {
+                    scanning = false;
+                    stopButton.disabled = true;
+                    startButton.disabled = false;
+                }).catch(err => console.error('Error stopping scanner:', err));
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            console.log('Scanned item:', decodedText);
+            if (!scannedItems.has(decodedText)) {
+                scannedItems.add(decodedText);
+                addItemToList(decodedText);
+                playBeep();
+                showNotification();
+            } else {
+                console.log('Item already scanned:', decodedText);
+            }
+        }
+
+        function onScanError(error) {
+            console.warn(`QR error: ${error}`);
+        }
+
+        function addItemToList(item) {
+            const lines = item.split('\n');
+            const firstLine = lines[0].trim();
+            const isReturn = firstLine.includes('Return');
+            let vendor = isReturn ? firstLine.split(' ')[0] : null;
+
+            const li = document.createElement('li');
+            const itemContent = document.createElement('span');
+            itemContent.className = 'item-content';
+            itemContent.textContent = item;
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.className = 'remove-button';
+            removeButton.onclick = () => {
+                li.remove();
+                scannedItems.delete(item);
+                updateVendorSectionVisibility();
+            };
+
+            li.appendChild(itemContent);
+            li.appendChild(removeButton);
+
+            if (isReturn) {
+                if (!vendorSections[vendor]) {
+                    createVendorSection(vendor);
+                }
+                vendorSections[vendor].list.appendChild(li);
+                vendorSections[vendor].section.style.display = 'block';
+            } else {
+                inventoryList.appendChild(li);
+                document.getElementById('inventorySection').style.display = 'block';
+            }
+        }
+
+        function createVendorSection(vendor) {
+            const section = document.createElement('div');
+            section.id = `${vendor}Section`;
+            section.className = 'vendor-section';
+
+            const h2 = document.createElement('h2');
+            h2.textContent = `${vendor} Returns`;
+            section.appendChild(h2);
+                  const list = document.createElement('ul');
+        list.id = `${vendor}List`;
+        list.className = 'vendor-list';
+        section.appendChild(list);
+
+        const emailButton = document.createElement('button');
+        emailButton.id = `${vendor}EmailButton`;
+        emailButton.className = 'vendor-button email-button';
+        emailButton.textContent = `Email ${vendor} Returns`;
+        emailButton.onclick = () => emailVendorReturns(vendor);
+        section.appendChild(emailButton);
+
+        const smsButton = document.createElement('button');
+        smsButton.id = `${vendor}SmsButton`;
+        smsButton.className = 'vendor-button sms-button';
+        smsButton.textContent = `SMS ${vendor} Returns`;
+        smsButton.onclick = () => smsVendorReturns(vendor);
+        section.appendChild(smsButton);
+
+        document.body.appendChild(section);
+
+        vendorSections[vendor] = { section, list, emailButton, smsButton };
+    }
+
+    function updateVendorSectionVisibility() {
+        document.getElementById('inventorySection').style.display = 
+            inventoryList.children.length > 0 ? 'block' : 'none';
+
+        for (const vendor in vendorSections) {
+            vendorSections[vendor].section.style.display = 
+                vendorSections[vendor].list.children.length > 0 ? 'block' : 'none';
+        }
+    }
+
+    function sendEmailReport() {
+        let report = 'Inventory Items:\n';
+        report += Array.from(inventoryList.children)
+            .map(li => li.querySelector('.item-content').textContent)
+            .join('\n\n');
+
+        for (const vendor in vendorSections) {
+            report += `\n\n${vendor} Returns:\n`;
+            report += Array.from(vendorSections[vendor].list.children)
+                .map(li => li.querySelector('.item-content').textContent)
+                .join('\n\n');
+        }
+
+        const subject = encodeURIComponent('Scan Report');
+        const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    function emailVendorReturns(vendor) {
+        const items = Array.from(vendorSections[vendor].list.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+
+        const subject = encodeURIComponent(`${vendor} Returns`);
+        const body = encodeURIComponent(report);
+        let email = vendorContacts[vendor].email;
+        let ccEmail = '';
+
+        if (Array.isArray(email)) {
+            ccEmail = `&cc=${encodeURIComponent(email[1])}`;
+            email = email[0];
+        }
+
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
+    }
+
+    function smsVendorReturns(vendor) {
+        const items = Array.from(vendorSections[vendor].list.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+
+        const smsNumbers = vendorContacts[vendor].sms;
+        const smsNumber = Array.isArray(smsNumbers) ? smsNumbers[0] : smsNumbers;
+
+        window.location.href = `sms:${smsNumber}?body=${encodeURIComponent(report)}`;
+    }
+
+    function initAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playBeep() {
+        if (!audioContext) initAudio();
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+    }
+
+    function showNotification() {
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 2000);
+    }
+</script>
+</body>
+</html>
