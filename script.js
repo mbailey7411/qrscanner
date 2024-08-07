@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const auditForm = document.getElementById('auditForm');
     const addItemButton = document.getElementById('addItemButton');
     const auditList = document.getElementById('auditList');
-    const sortOrderButton = document.getElementById('sortOrderButton');
     const sortLocationButton = document.getElementById('sortLocationButton');
     const sortDateButton = document.getElementById('sortDateButton');
     const emailAuditButton = document.getElementById('emailAuditButton');
@@ -43,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     inventoryEmailButton.addEventListener('click', sendInventoryEmailReport);
     inventorySmsButton.addEventListener('click', sendInventorySmsReport);
     addItemButton.addEventListener('click', addItem);
-    sortOrderButton.addEventListener('click', () => sortList('order'));
     sortLocationButton.addEventListener('click', () => sortList('location'));
     sortDateButton.addEventListener('click', () => sortList('date'));
     emailAuditButton.addEventListener('click', sendAuditEmailReport);
@@ -170,18 +168,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <div><strong>Order:</strong> ${item.order}</div>
             <div><strong>Labeled:</strong> ${item.labeled}</div>
             <div><strong>Location:</strong> ${item.location}</div>
+            <div class="edit-remove-buttons">
+                <button class="edit-button">Edit</button>
+                <button class="remove-button">Remove</button>
+            </div>
         `;
         li.dataset.item = JSON.stringify(item);
 
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Edit';
+        const editButton = li.querySelector('.edit-button');
         editButton.addEventListener('click', () => editItem(li));
-        li.appendChild(editButton);
 
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
+        const removeButton = li.querySelector('.remove-button');
         removeButton.addEventListener('click', () => li.remove());
-        li.appendChild(removeButton);
 
         auditList.appendChild(li);
         auditForm.reset();
@@ -201,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function sortList(criteria) {
         const items = Array.from(auditList.children).map(li => JSON.parse(li.dataset.item));
         items.sort((a, b) => {
-            if (criteria === 'order') return a.order.localeCompare(b.order);
             if (criteria === 'location') return a.location.localeCompare(b.location);
             if (criteria === 'date') return new Date(a.labeled) - new Date(b.labeled);
         });
@@ -215,18 +212,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><strong>Order:</strong> ${item.order}</div>
                 <div><strong>Labeled:</strong> ${item.labeled}</div>
                 <div><strong>Location:</strong> ${item.location}</div>
+                <div class="edit-remove-buttons">
+                    <button class="edit-button">Edit</button>
+                    <button class="remove-button">Remove</button>
+                </div>
             `;
             li.dataset.item = JSON.stringify(item);
 
-            const editButton = document.createElement('button');
-            editButton.textContent = 'Edit';
+            const editButton = li.querySelector('.edit-button');
             editButton.addEventListener('click', () => editItem(li));
-            li.appendChild(editButton);
 
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove';
+            const removeButton = li.querySelector('.remove-button');
             removeButton.addEventListener('click', () => li.remove());
-            li.appendChild(removeButton);
 
             auditList.appendChild(li);
         });
