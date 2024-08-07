@@ -131,7 +131,7 @@
             padding: 10px;
             border-radius: 5px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: flex-start;
         }
 
@@ -221,17 +221,17 @@
         <div id="qr-reader-audit"></div>
         <form id="auditForm">
             <label for="customer">Customer</label>
-            <input type="text" id="customer" name="customer" required>
+            <input type="text" id="customer" name="customer">
             <label for="part">Part</label>
-            <input type="text" id="part" name="part" required>
+            <input type="text" id="part" name="part">
             <label for="supplier">Supplier</label>
-            <input type="text" id="supplier" name="supplier" required>
+            <input type="text" id="supplier" name="supplier">
             <label for="order">Order</label>
-            <input type="text" id="order" name="order" required>
+            <input type="text" id="order" name="order">
             <label for="labeled">Labeled Date</label>
-            <input type="date" id="labeled" name="labeled" required>
+            <input type="date" id="labeled" name="labeled">
             <label for="location">Location</label>
-            <input type="text" id="location" name="location" required>
+            <input type="text" id="location" name="location">
             <button type="button" id="addItemButton">Add Item</button>
         </form>
         <ul id="auditList"></ul>
@@ -245,4 +245,3 @@
     <script src="script.js"></script>
 </body>
 </html>
- 
