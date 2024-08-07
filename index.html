@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-title" content="20/20 Scanner">
+    <title>20/20 QR Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <img src="2020-Logo-Color-150.png" alt="Logo">
+        <h1>Warehouse QR Scanner</h1>
+    </header>
+    <main id="mainScreen">
+        <button id="returnPartsButton">Return Parts</button>
+        <button id="auditPartsButton">Audit Parts</button>
+    </main>
+    <section id="returnPartsScreen" class="hidden">
+        <div id="qr-reader"></div>
+        <div class="button-container">
+            <button id="startButton" disabled aria-label="Start Scanning">Start Scanning</button>
+            <button id="stopButton" aria-label="Stop Scanning">Stop Scanning</button>
+            <button id="emailReportButton" aria-label="Send Email Report">Send Email Report</button>
+        </div>
+        <section id="inventorySection" class="inventory-section">
+            <h2>Inventory Items</h2>
+            <ul id="inventoryList"></ul>
+            <div class="button-container">
+                <button id="inventoryEmailButton" class="email-button" aria-label="Email Inventory Report">Email Inventory Report</button>
+                <button id="inventorySmsButton" class="sms-button" aria-label="SMS Inventory Report">SMS Inventory Report</button>
+            </div>
+        </section>
+    </section>
+    <section id="auditPartsScreen" class="hidden">
+        <form id="auditForm">
+            <label for="customer">Customer</label>
+            <input type="text" id="customer" name="customer" required>
+            <label for="part">Part</label>
+            <input type="text" id="part" name="part" required>
+            <label for="supplier">Supplier</label>
+            <input type="text" id="supplier" name="supplier" required>
+            <label for="order">Order</label>
+            <input type="text" id="order" name="order" required>
+            <label for="labeled">Labeled Date</label>
+            <input type="date" id="labeled" name="labeled" required>
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location" required>
+            <button type="button" id="addItemButton">Add Item</button>
+        </form>
+        <ul id="auditList"></ul>
+        <div class="button-container">
+            <button id="sortOrderButton">Sort by Order</button>
+            <button id="sortLocationButton">Sort by Location</button>
+            <button id="sortDateButton">Sort by Date</button>
+        </div>
+    </section>
+    <div id="notification" role="alert">Item Scanned!</div>
+    <script src="script.js"></script>
+</body>
+</html>
