@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let html5QrCodeReturn, html5QrCodeAudit;
+    let html5QrCode;
     const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
     let scanning = false;
 
@@ -51,12 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
         
-        if (html5QrCodeReturn) {
-            html5QrCodeReturn.stop().catch(err => console.error('Error stopping scanner:', err));
-        }
-
-        if (html5QrCodeAudit) {
-            html5QrCodeAudit.stop().catch(err => console.error('Error stopping scanner:', err));
+        if (html5QrCode) {
+            stopScanning();
         }
 
         if (screen === 'returnParts') {
@@ -69,21 +65,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initScanner(screen) {
-        if (screen === 'return' && !html5QrCodeReturn) {
-            html5QrCodeReturn = new Html5Qrcode("qr-reader-return");
+        if (html5QrCode) {
+            html5QrCode.clear();
         }
-        if (screen === 'audit' && !html5QrCodeAudit) {
-            html5QrCodeAudit = new Html5Qrcode("qr-reader-audit");
-        }
+
+        const qrReaderElement = screen === 'return' ? 'qr-reader' : 'qr-reader-audit';
+        html5QrCode = new Html5Qrcode(qrReaderElement);
     }
 
     function startScanning() {
-        if (!scanning) {
-            const scanner = document.querySelector('#returnPartsScreen').style.display !== 'none'
-                ? html5QrCodeReturn
-                : html5QrCodeAudit;
-
-            scanner.start(
+        if (!scanning && html5QrCode) {
+            html5QrCode.start(
                 { facingMode: "environment" },
                 qrConfig,
                 onScanSuccess,
@@ -100,12 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function stopScanning() {
-        if (scanning) {
-            const scanner = document.querySelector('#returnPartsScreen').style.display !== 'none'
-                ? html5QrCodeReturn
-                : html5QrCodeAudit;
-
-            scanner.stop().then(() => {
+        if (scanning && html5QrCode) {
+            html5QrCode.stop().then(() => {
                 scanning = false;
                 stopButton.disabled = true;
                 startButton.disabled = false;
