@@ -50,9 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
         mainScreen.classList.add('hidden');
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
-        
+
         if (html5QrCode) {
             html5QrCode.clear();
+            html5QrCode = null;
         }
 
         if (screen === 'returnParts') {
@@ -65,9 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initScanner(elementId) {
-        if (html5QrCode) {
-            html5QrCode.clear();
-        }
         html5QrCode = new Html5Qrcode(elementId);
         startScanning();
     }
@@ -104,15 +102,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Scanned item:', decodedText);
         if (!scannedItems.has(decodedText)) {
             scannedItems.add(decodedText);
-            if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
-                addItemToList(decodedText);
-            } else {
+            if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
                 handleAuditScan(decodedText);
+            } else {
+                addItemToList(decodedText);
             }
             playBeep();
             showNotification();
-            // Keep scanning
-            startScanning();
         } else {
             console.log('Item already scanned:', decodedText);
         }
