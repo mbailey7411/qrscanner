@@ -68,6 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!html5QrCode) {
             html5QrCode = new Html5Qrcode("qr-reader");
         }
+        if (!scanning) {
+            startScanning();
+        }
     }
 
     function startScanning() {
