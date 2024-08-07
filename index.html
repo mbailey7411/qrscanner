@@ -16,11 +16,11 @@
         <h1>Warehouse QR Scanner</h1>
     </header>
     <main id="mainScreen">
-        <button id="returnPartsButton">Return Parts</button>
-        <button id="auditPartsButton">Audit Parts</button>
+        <button class="action-button" id="returnPartsButton">Return Parts</button>
+        <button class="action-button" id="auditPartsButton">Audit Parts</button>
     </main>
     <section id="returnPartsScreen" class="hidden">
-        <div id="qr-reader" style="width: 500px"></div>
+        <div id="qr-reader-return" style="width: 500px"></div>
         <div class="button-container">
             <button id="startButton" aria-label="Start Scanning">Start Scanning</button>
             <button id="stopButton" aria-label="Stop Scanning">Stop Scanning</button>
@@ -36,6 +36,7 @@
         </section>
     </section>
     <section id="auditPartsScreen" class="hidden">
+        <div id="qr-reader-audit" style="width: 500px"></div>
         <form id="auditForm">
             <label for="customer">Customer</label>
             <input type="text" id="customer" name="customer" required>
@@ -62,4 +63,3 @@
     <script src="script.js"></script>
 </body>
 </html>
- 
