@@ -104,10 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Scanned item:', decodedText);
         if (!scannedItems.has(decodedText)) {
             scannedItems.add(decodedText);
-            if (decodedText.includes('CUSTOMER=')) {
-                handleAuditScan(decodedText);
-            } else {
+            if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
                 addItemToList(decodedText);
+            } else {
+                handleAuditScan(decodedText);
             }
             playBeep();
             showNotification();
