@@ -46,8 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sortLocationButton.addEventListener('click', () => sortList('location'));
     sortDateButton.addEventListener('click', () => sortList('date'));
 
-    window.addEventListener('load', initScanner);
-
     function switchScreen(screen) {
         mainScreen.classList.add('hidden');
         returnPartsScreen.classList.add('hidden');
@@ -55,14 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (screen === 'returnParts') {
             returnPartsScreen.classList.remove('hidden');
+            startScanning();
         } else if (screen === 'auditParts') {
             auditPartsScreen.classList.remove('hidden');
+            startScanning();
         }
-    }
-
-    function initScanner() {
-        startScanning();
-        document.addEventListener('click', initAudio, { once: true });
     }
 
     function startScanning() {
