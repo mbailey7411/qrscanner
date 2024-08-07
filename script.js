@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auditPartsScreen.classList.add('hidden');
         
         if (html5QrCode) {
-            stopScanning();
+            html5QrCode.clear();
         }
 
         if (screen === 'returnParts') {
@@ -447,4 +447,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.location.href = `sms:?body=${encodeURIComponent(report)}`;
     }
-}); 
+});
