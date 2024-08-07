@@ -127,11 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return acc;
         }, {});
 
-        if (!fields.customer || !fields.part || !fields.supplier || !fields.order || !fields.labeled) {
-            alert('Invalid QR code format.');
-            return;
-        }
-
         document.getElementById('customer').value = fields.customer || '';
         document.getElementById('part').value = fields.part || '';
         document.getElementById('supplier').value = fields.supplier || '';
@@ -165,7 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const li = document.createElement('li');
-        li.textContent = JSON.stringify(item);
+        li.innerHTML = `
+            <div><strong>Customer:</strong> ${item.customer}</div>
+            <div><strong>Part:</strong> ${item.part}</div>
+            <div><strong>Supplier:</strong> ${item.supplier}</div>
+            <div><strong>Order:</strong> ${item.order}</div>
+            <div><strong>Labeled:</strong> ${item.labeled}</div>
+            <div><strong>Location:</strong> ${item.location}</div>
+        `;
         li.dataset.item = JSON.stringify(item);
 
         const editButton = document.createElement('button');
@@ -203,7 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
         auditList.innerHTML = '';
         items.forEach(item => {
             const li = document.createElement('li');
-            li.textContent = JSON.stringify(item);
+            li.innerHTML = `
+                <div><strong>Customer:</strong> ${item.customer}</div>
+                <div><strong>Part:</strong> ${item.part}</div>
+                <div><strong>Supplier:</strong> ${item.supplier}</div>
+                <div><strong>Order:</strong> ${item.order}</div>
+                <div><strong>Labeled:</strong> ${item.labeled}</div>
+                <div><strong>Location:</strong> ${item.location}</div>
+            `;
             li.dataset.item = JSON.stringify(item);
 
             const editButton = document.createElement('button');
@@ -287,5 +296,137 @@ document.addEventListener('DOMContentLoaded', () => {
             notification.style.display = 'none';
         }, 2000);
     }
+
+    function addItemToList(item) {
+        const lines = item.split('\n');
+        const firstLine = lines[0].trim();
+        const isReturn = firstLine.includes('Return');
+        let vendor = isReturn ? firstLine.split(' ')[0] : null;
+
+        const li = document.createElement('li');
+        const itemContent = document.createElement('span');
+        itemContent.className = 'item-content';
+        itemContent.textContent = item;
+
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        removeButton.className = 'remove-button';
+        removeButton.onclick = () => {
+            li.remove();
+            scannedItems.delete(item);
+            updateVendorSectionVisibility();
+        };
+
+        li.appendChild(itemContent);
+        li.appendChild(removeButton);
+
+        if (isReturn) {
+            if (!vendorSections[vendor]) {
+                createVendorSection(vendor);
+            }
+            vendorSections[vendor].list.appendChild(li);
+            vendorSections[vendor].section.style.display = 'block';
+        } else {
+            inventoryList.appendChild(li);
+            inventorySection.style.display = 'block';
+        }
+    }
+
+    function createVendorSection(vendor) {
+        const section = document.createElement('div');
+        section.id = `${vendor}Section`;
+        section.className = 'vendor-section';
+
+        const h2 = document.createElement('h2');
+        h2.textContent = `${vendor} Returns`;
+        section.appendChild(h2);
+
+        const list = document.createElement('ul');
+        list.id = `${vendor}List`;
+        list.className = 'vendor-list';
+        section.appendChild(list);
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'vendor-button-container';
+
+        const emailButton = document.createElement('button');
+        emailButton.id = `${vendor}EmailButton`;
+        emailButton.className = 'vendor-button email-button';
+        emailButton.textContent = `Email ${vendor} Returns`;
+        emailButton.onclick = () => emailVendorReturns(vendor);
+        buttonContainer.appendChild(emailButton);
+
+        const smsButton = document.createElement('button');
+        smsButton.id = `${vendor}SmsButton`;
+        smsButton.className = 'vendor-button sms-button';
+        smsButton.textContent = `SMS ${vendor} Returns`;
+        smsButton.onclick = () => smsVendorReturns(vendor);
+        buttonContainer.appendChild(smsButton);
+
+        section.appendChild(buttonContainer);
+        document.body.appendChild(section);
+
+        vendorSections[vendor] = { section, list, emailButton, smsButton };
+    }
+
+    function updateVendorSectionVisibility() {
+        inventorySection.style.display =
+            inventoryList.children.length > 0 ? 'block' : 'none';
+
+        for (const vendor in vendorSections) {
+            vendorSections[vendor].section.style.display =
+                vendorSections[vendor].list.children.length > 0 ? 'block' : 'none';
+        }
+    }
+
+    function emailVendorReturns(vendor) {
+        const items = Array.from(vendorSections[vendor].list.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+
+        const subject = encodeURIComponent(`${vendor} Returns`);
+        const body = encodeURIComponent(report);
+        let email = vendorContacts[vendor]?.email || '';
+        let ccEmail = '';
+
+        if (Array.isArray(email)) {
+            ccEmail = `&cc=${encodeURIComponent(email[1])}`;
+            email = email[0];
+        }
+
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
+    }
+
+    function smsVendorReturns(vendor) {
+        const items = Array.from(vendorSections[vendor].list.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+
+        const smsNumbers = vendorContacts[vendor]?.sms || '';
+        const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
+
+        window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
+    }
+
+    function sendInventoryEmailReport() {
+        const items = Array.from(inventoryList.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+
+        const subject = encodeURIComponent('Inventory Report');
+        const body = encodeURIComponent(report);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    function sendInventorySmsReport() {
+        const items = Array.from(inventoryList.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+
+        window.location.href = `sms:?body=${encodeURIComponent(report)}`;
+    }
 });
- 
