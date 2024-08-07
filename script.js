@@ -454,3 +454,4 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `sms:?body=${encodeURIComponent(report)}`;
     }
 });
+ 
