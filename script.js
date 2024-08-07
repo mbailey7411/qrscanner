@@ -47,19 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
     sortDateButton.addEventListener('click', () => sortList('date'));
 
     function switchScreen(screen) {
-        mainScreen.classList.add('hidden');
-        returnPartsScreen.classList.add('hidden');
-        auditPartsScreen.classList.add('hidden');
+        mainScreen.style.display = 'none';
+        returnPartsScreen.style.display = 'none';
+        auditPartsScreen.style.display = 'none';
         
         if (html5QrCode) {
             stopScanning();
         }
 
         if (screen === 'returnParts') {
-            returnPartsScreen.classList.remove('hidden');
+            returnPartsScreen.style.display = 'block';
             initScanner();
         } else if (screen === 'auditParts') {
-            auditPartsScreen.classList.remove('hidden');
+            auditPartsScreen.style.display = 'block';
             initScanner();
         }
     }
@@ -67,9 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function initScanner() {
         if (!html5QrCode) {
             html5QrCode = new Html5Qrcode("qr-reader");
-        }
-        if (!scanning) {
-            startScanning();
         }
     }
 
@@ -233,13 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 report += Array.from(vendorSections[vendor].list.children)
                     .map(li => li.querySelector('.item-content').textContent)
                     .join('\n\n');
+            }
         }
-    }
 
-    const subject = encodeURIComponent('Scan Report');
-    const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-}
+        const subject = encodeURIComponent('Scan Report');
+        const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
 
     function sendInventoryEmailReport() {
         const items = Array.from(inventoryList.children)
