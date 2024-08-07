@@ -52,10 +52,20 @@ document.addEventListener('DOMContentLoaded', () => {
         auditPartsScreen.classList.add('hidden');
 
         if (html5QrCode) {
-            html5QrCode.clear();
-            html5QrCode = null;
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = null;
+                showScreen(screen);
+            }).catch(err => {
+                console.error('Error stopping scanner:', err);
+                showScreen(screen);
+            });
+        } else {
+            showScreen(screen);
         }
+    }
 
+    function showScreen(screen) {
         if (screen === 'returnParts') {
             returnPartsScreen.classList.remove('hidden');
             initScanner('qr-reader');
@@ -444,4 +454,3 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `sms:?body=${encodeURIComponent(report)}`;
     }
 });
- 
