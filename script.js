@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
 
-        if (html5QrCode) {
+        if (scanning && html5QrCode) {
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
                 html5QrCode = null;
@@ -454,4 +454,3 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `sms:?body=${encodeURIComponent(report)}`;
     }
 });
- 
