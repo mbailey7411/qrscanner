@@ -54,10 +54,14 @@
             margin: 10px 0;
         }
 
-        #qr-reader {
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 20px;
+        .hidden {
+            display: none;
+        }
+
+        .main-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
         }
 
         .button-container {
@@ -81,7 +85,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        #stopButton, #startButton {
+        #startButton, #stopButton {
             background-color: #e74c3c;
             color: white;
         }
@@ -115,13 +119,13 @@
             display: none;
         }
 
-        #inventoryList, .vendor-list {
+        #inventoryList, .vendor-list, #auditList {
             list-style-type: none;
             padding: 0;
             margin: 0;
         }
 
-        #inventoryList li, .vendor-list li {
+        #inventoryList li, .vendor-list li, #auditList li {
             background-color: white;
             margin-bottom: 10px;
             padding: 10px;
@@ -182,13 +186,9 @@
                 font-size: 14px;
             }
 
-            #qr-reader {
+            #qr-reader, #qr-reader-audit {
                 max-width: 300px;
             }
-        }
-
-        .hidden {
-            display: none;
         }
     </style>
 </head>
@@ -197,10 +197,10 @@
         <img src="2020-Logo-Color-150.png" alt="Logo">
         <h1>Warehouse QR Scanner</h1>
     </div>
-    <main id="mainScreen">
+    <div id="mainScreen" class="main-buttons">
         <button id="returnPartsButton">Return Parts</button>
         <button id="auditPartsButton">Audit Parts</button>
-    </main>
+    </div>
     <section id="returnPartsScreen" class="hidden">
         <div id="qr-reader"></div>
         <div class="button-container">
@@ -241,7 +241,7 @@
             <button id="sortDateButton">Sort by Date</button>
         </div>
     </section>
-    <div id="notification" role="alert">Item Scanned!</div>
+    <div id="notification">Item Scanned!</div>
     <script src="script.js"></script>
 </body>
 </html>
