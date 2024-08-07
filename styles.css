@@ -2,11 +2,6 @@
     display: none;
 }
 
-#notification {
-    display: none;
-    /* existing styles */
-}
-
 #mainScreen {
     display: flex;
     flex-direction: column;
