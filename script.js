@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const html5QrCode = new Html5Qrcode("qr-reader");
+    let html5QrCode;
     const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
     let scanning = false;
 
@@ -50,18 +50,27 @@ document.addEventListener('DOMContentLoaded', () => {
         mainScreen.classList.add('hidden');
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
+        
+        if (html5QrCode) {
+            stopScanning();
+        }
 
         if (screen === 'returnParts') {
             returnPartsScreen.classList.remove('hidden');
-            startScanning();
+            initScanner();
         } else if (screen === 'auditParts') {
             auditPartsScreen.classList.remove('hidden');
-            startScanning();
+            initScanner();
         }
     }
 
+    function initScanner() {
+        html5QrCode = new Html5Qrcode("qr-reader");
+        startScanning();
+    }
+
     function startScanning() {
-        if (!scanning) {
+        if (!scanning && html5QrCode) {
             html5QrCode.start(
                 { facingMode: "environment" },
                 qrConfig,
@@ -79,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function stopScanning() {
-        if (scanning) {
+        if (scanning && html5QrCode) {
             html5QrCode.stop().then(() => {
                 scanning = false;
                 stopButton.disabled = true;
