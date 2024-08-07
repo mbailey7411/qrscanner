@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortOrderButton = document.getElementById('sortOrderButton');
     const sortLocationButton = document.getElementById('sortLocationButton');
     const sortDateButton = document.getElementById('sortDateButton');
+    const emailAuditButton = document.getElementById('emailAuditButton');
 
     const scannedItems = new Set();
     let audioContext;
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sortOrderButton.addEventListener('click', () => sortList('order'));
     sortLocationButton.addEventListener('click', () => sortList('location'));
     sortDateButton.addEventListener('click', () => sortList('date'));
+    emailAuditButton.addEventListener('click', sendAuditEmailReport);
 
     function switchScreen(screen) {
         mainScreen.classList.add('hidden');
@@ -111,6 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             playBeep();
             showNotification();
+            // Keep scanning
+            startScanning();
         } else {
             console.log('Item already scanned:', decodedText);
         }
@@ -132,8 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('supplier').value = fields.supplier || '';
         document.getElementById('order').value = fields.order || '';
         document.getElementById('labeled').value = fields.labeled || '';
-        const location = prompt('Enter the location:');
-        document.getElementById('location').value = location || '';
+        document.getElementById('location').value = '';
     }
 
     function addItem() {
@@ -267,6 +270,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
         window.location.href = `sms:?body=${encodeURIComponent(report)}`;
+    }
+
+    function sendAuditEmailReport() {
+        const items = Array.from(auditList.children)
+            .map(li => JSON.parse(li.dataset.item))
+            .map(item => `
+                Customer: ${item.customer}
+                Part: ${item.part}
+                Supplier: ${item.supplier}
+                Order: ${item.order}
+                Labeled: ${item.labeled}
+                Location: ${item.location}
+            `).join('\n\n');
+
+        const report = `Audit Parts:\n\n${items}\n\n20/20 Auto Glass`;
+        const subject = encodeURIComponent('Audit Parts Report');
+        const body = encodeURIComponent(report);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
     function initAudio() {
