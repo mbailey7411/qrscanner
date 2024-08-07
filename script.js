@@ -57,20 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (screen === 'returnParts') {
             returnPartsScreen.classList.remove('hidden');
-            initScanner('return');
+            initScanner('qr-reader');
         } else if (screen === 'auditParts') {
             auditPartsScreen.classList.remove('hidden');
-            initScanner('audit');
+            initScanner('qr-reader-audit');
         }
     }
 
-    function initScanner(screen) {
+    function initScanner(elementId) {
         if (html5QrCode) {
             html5QrCode.clear();
         }
-
-        const qrReaderElement = screen === 'return' ? 'qr-reader' : 'qr-reader-audit';
-        html5QrCode = new Html5Qrcode(qrReaderElement);
+        html5QrCode = new Html5Qrcode(elementId);
+        startScanning();
     }
 
     function startScanning() {
