@@ -65,7 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initScanner() {
-        html5QrCode = new Html5Qrcode("qr-reader");
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("qr-reader");
+        }
         startScanning();
     }
 
@@ -229,13 +231,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 report += Array.from(vendorSections[vendor].list.children)
                     .map(li => li.querySelector('.item-content').textContent)
                     .join('\n\n');
-            }
         }
-
-        const subject = encodeURIComponent('Scan Report');
-        const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
+
+    const subject = encodeURIComponent('Scan Report');
+    const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
 
     function sendInventoryEmailReport() {
         const items = Array.from(inventoryList.children)
