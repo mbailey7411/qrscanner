@@ -99,7 +99,7 @@
             padding: 10px;
             border-radius: 5px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: flex-start;
         }
 
@@ -185,6 +185,13 @@
             display: flex;
             justify-content: center;
             margin-top: 20px;
+        }
+
+        #qr-reader, #qr-reader-audit {
+            width: 100%;
+            max-width: 500px;
+            height: 500px; /* Ensuring the scanner is a square */
+            margin: 20px 0;
         }
     </style>
 </head>
