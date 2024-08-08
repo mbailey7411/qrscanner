@@ -147,15 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function restartScanner() {
-        stopScanning().then(() => {
-            if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
-                startScanning(html5QrCodeAudit);
-            } else {
-                startScanning(html5QrCodeReturn);
-            }
-        }).catch(err => {
-            console.error('Error restarting scanner:', err);
-        });
+        if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
+            startScanning(html5QrCodeAudit);
+        } else {
+            startScanning(html5QrCodeReturn);
+        }
     }
 
     function onScanError(error) {
@@ -224,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         auditList.appendChild(li);
         auditForm.reset();
-        restartScanner();
     }
 
     function editItem(li) {
@@ -236,7 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('labeled').value = item.labeled;
         document.getElementById('location').value = item.location;
         li.remove();
-        restartScanner();
     }
 
     function sortList(criteria) {
