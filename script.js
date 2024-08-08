@@ -1,10 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
-    let html5QrCode;
-    const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+document.addEventListener('DOMContentLoaded', function () {
+    const html5QrCodeConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+    let html5QrCode = null;
 
+    const mainScreen = document.getElementById('mainScreen');
     const returnPartsButton = document.getElementById('returnPartsButton');
     const auditPartsButton = document.getElementById('auditPartsButton');
-    const mainScreen = document.getElementById('mainScreen');
     const returnPartsScreen = document.getElementById('returnPartsScreen');
     const auditPartsScreen = document.getElementById('auditPartsScreen');
 
@@ -46,27 +46,23 @@ document.addEventListener('DOMContentLoaded', () => {
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
 
-        if (screen === 'returnParts') {
-            returnPartsScreen.classList.remove('hidden');
-            startScanner('qr-reader');
-        } else if (screen === 'auditParts') {
-            auditPartsScreen.classList.remove('hidden');
-            startScanner('qr-reader-audit');
-        }
-    }
-
-    function startScanner(elementId) {
         if (html5QrCode) {
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
-                html5QrCode = new Html5Qrcode(elementId);
-                html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanError);
+                html5QrCode = new Html5Qrcode(screen === 'returnParts' ? 'qr-reader' : 'qr-reader-audit');
+                html5QrCode.start({ facingMode: "environment" }, html5QrCodeConfig, onScanSuccess, onScanError);
             }).catch(err => {
                 console.error('Error stopping scanner:', err);
             });
         } else {
-            html5QrCode = new Html5Qrcode(elementId);
-            html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanError);
+            html5QrCode = new Html5Qrcode(screen === 'returnParts' ? 'qr-reader' : 'qr-reader-audit');
+            html5QrCode.start({ facingMode: "environment" }, html5QrCodeConfig, onScanSuccess, onScanError);
+        }
+
+        if (screen === 'returnParts') {
+            returnPartsScreen.classList.remove('hidden');
+        } else if (screen === 'auditParts') {
+            auditPartsScreen.classList.remove('hidden');
         }
     }
 
@@ -255,34 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
-    function initAudio() {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    function playBeep() {
-        if (!audioContext) initAudio();
-
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.1);
-    }
-
-    function showNotification() {
-        notification.style.display = 'block';
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 2000);
-    }
-
     function addItemToList(item) {
         const lines = item.split('\n');
         const firstLine = lines[0].trim();
@@ -365,34 +333,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function emailVendorReturns(vendor) {
-        const items = Array.from(vendorSections[vendor].list.children)
-            .map(li => li.querySelector('.item-content').textContent);
-
-        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        const subject = encodeURIComponent(`${vendor} Returns`);
-        const body = encodeURIComponent(report);
-        let email = vendorContacts[vendor]?.email || '';
-        let ccEmail = '';
-
-        if (Array.isArray(email)) {
-            ccEmail = `&cc=${encodeURIComponent(email[1])}`;
-            email = email[0];
-        }
-
-        window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
+    function initAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    function smsVendorReturns(vendor) {
-        const items = Array.from(vendorSections[vendor].list.children)
-            .map(li => li.querySelector('.item-content').textContent);
+    function playBeep() {
+        if (!audioContext) initAudio();
 
-        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-        const smsNumbers = vendorContacts[vendor]?.sms || '';
-        const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
 
-        window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
     }
-}); 
+
+    function showNotification() {
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 2000);
+    }
+});
