@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
                 handleAuditScan(decodedText);
             } else {
-                addItemToList(decodedText);
+                addItemToReturnList(decodedText);
             }
             playBeep();
             showNotification();
@@ -147,6 +147,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
         auditList.appendChild(li);
         auditForm.reset();
+    }
+
+    function addItemToReturnList(item) {
+        const li = document.createElement('li');
+        const itemContent = document.createElement('span');
+        itemContent.className = 'item-content';
+        itemContent.textContent = item;
+
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        removeButton.className = 'remove-button';
+        removeButton.onclick = () => {
+            li.remove();
+            scannedItems.delete(item);
+            updateVendorSectionVisibility();
+        };
+
+        li.appendChild(itemContent);
+        li.appendChild(removeButton);
+
+        const firstLine = item.split('\n')[0].trim();
+        const isReturn = firstLine.includes('Return');
+        let vendor = isReturn ? firstLine.split(' ')[0] : null;
+
+        if (isReturn) {
+            if (!vendorSections[vendor]) {
+                createVendorSection(vendor);
+            }
+            vendorSections[vendor].list.appendChild(li);
+            vendorSections[vendor].section.style.display = 'block';
+        } else {
+            inventoryList.appendChild(li);
+            inventorySection.style.display = 'block';
+        }
     }
 
     function editItem(li) {
@@ -273,78 +307,6 @@ document.addEventListener('DOMContentLoaded', function () {
         smsNumbers.forEach(number => {
             window.open(`sms:${number}?body=${encodeURIComponent(report)}`);
         });
-    }
-
-    function addItemToList(item) {
-        const lines = item.split('\n');
-        const firstLine = lines[0].trim();
-        const isReturn = firstLine.includes('Return');
-        let vendor = isReturn ? firstLine.split(' ')[0] : null;
-
-        const li = document.createElement('li');
-        const itemContent = document.createElement('span');
-        itemContent.className = 'item-content';
-        itemContent.textContent = item;
-
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        removeButton.className = 'remove-button';
-        removeButton.onclick = () => {
-            li.remove();
-            scannedItems.delete(item);
-            updateVendorSectionVisibility();
-        };
-
-        li.appendChild(itemContent);
-        li.appendChild(removeButton);
-
-        if (isReturn) {
-            if (!vendorSections[vendor]) {
-                createVendorSection(vendor);
-            }
-            vendorSections[vendor].list.appendChild(li);
-            vendorSections[vendor].section.style.display = 'block';
-        } else {
-            inventoryList.appendChild(li);
-            inventorySection.style.display = 'block';
-        }
-    }
-
-    function createVendorSection(vendor) {
-        const section = document.createElement('div');
-        section.id = `${vendor}Section`;
-        section.className = 'vendor-section';
-
-        const h2 = document.createElement('h2');
-        h2.textContent = `${vendor} Returns`;
-        section.appendChild(h2);
-
-        const list = document.createElement('ul');
-        list.id = `${vendor}List`;
-        list.className = 'vendor-list';
-        section.appendChild(list);
-
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'vendor-button-container';
-
-        const emailButton = document.createElement('button');
-        emailButton.id = `${vendor}EmailButton`;
-        emailButton.className = 'vendor-button email-button';
-        emailButton.textContent = `Email ${vendor} Returns`;
-        emailButton.onclick = () => emailVendorReturns(vendor);
-        buttonContainer.appendChild(emailButton);
-
-        const smsButton = document.createElement('button');
-        smsButton.id = `${vendor}SmsButton`;
-        smsButton.className = 'vendor-button sms-button';
-        smsButton.textContent = `SMS ${vendor} Returns`;
-        smsButton.onclick = () => smsVendorReturns(vendor);
-        buttonContainer.appendChild(smsButton);
-
-        section.appendChild(buttonContainer);
-        document.body.appendChild(section);
-
-        vendorSections[vendor] = { section, list, emailButton, smsButton };
     }
 
     function updateVendorSectionVisibility() {
