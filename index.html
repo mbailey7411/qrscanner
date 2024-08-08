@@ -165,8 +165,18 @@
             }
 
             #qr-reader, #qr-reader-audit {
-                max-width: 300px;
+                width: 100%;
+                max-width: 500px; /* Ensures uniform size across both pages */
+                height: 500px;    /* Ensures the scanner is square */
+                margin: 20px 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: #f0f0f0;
+                border: 2px solid #3498db; /* Optional: Adds a border for clarity */
+                border-radius: 10px;       /* Optional: Adds rounded corners */
             }
+
         }
 
         .hidden {
