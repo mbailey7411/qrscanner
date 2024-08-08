@@ -251,6 +251,30 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
+    function emailVendorReturns(vendor) {
+        const items = Array.from(vendorSections[vendor].list.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `${vendor} Returns:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+        const subject = encodeURIComponent(`${vendor} Returns Report`);
+        const body = encodeURIComponent(report);
+        const emails = Array.isArray(vendorContacts[vendor].email) ? vendorContacts[vendor].email : [vendorContacts[vendor].email];
+        emails.forEach(email => {
+            window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+        });
+    }
+
+    function smsVendorReturns(vendor) {
+        const items = Array.from(vendorSections[vendor].list.children)
+            .map(li => li.querySelector('.item-content').textContent);
+
+        const report = `${vendor} Returns:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+        const smsNumbers = Array.isArray(vendorContacts[vendor].sms) ? vendorContacts[vendor].sms : [vendorContacts[vendor].sms];
+        smsNumbers.forEach(number => {
+            window.open(`sms:${number}?body=${encodeURIComponent(report)}`);
+        });
+    }
+
     function addItemToList(item) {
         const lines = item.split('\n');
         const firstLine = lines[0].trim();
@@ -360,4 +384,4 @@ document.addEventListener('DOMContentLoaded', function () {
             notification.style.display = 'none';
         }, 2000);
     }
-}); 
+});
