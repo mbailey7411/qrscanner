@@ -66,21 +66,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function onScanSuccess(decodedText) {
-        console.log('Scanned item:', decodedText);
-        if (!scannedItems.has(decodedText)) {
-            scannedItems.add(decodedText);
-            if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
-                addItemToReturnList(decodedText);
-            } else {
-                handleAuditScan(decodedText);
-            }
-            playBeep();
-            showNotification();
+function onScanSuccess(decodedText) {
+    console.log('Scanned item:', decodedText);
+    if (!scannedItems.has(decodedText)) {
+        scannedItems.add(decodedText);
+        if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
+            addItemToReturnList(decodedText);
         } else {
-            console.log('Item already scanned:', decodedText);
+            handleAuditScan(decodedText);
         }
+        playBeep();
+        showNotification();
+    } else {
+        console.log('Item already scanned:', decodedText);
     }
+    // Ensure the layout is consistent after a scan
+    maintainLayoutConsistency();
+}
+
+function maintainLayoutConsistency() {
+    // Force camera and button alignment
+    document.getElementById('qr-reader').style.width = '100%';
+    document.getElementById('qr-reader').style.height = '500px';
+    document.getElementById('emailReportButton').style.width = '100%';
+    document.getElementById('emailReportButton').style.textAlign = 'center';
+}
+
 
     function onScanError(error) {
         console.warn(`QR error: ${error}`);
