@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div><strong>Location:</strong> ${item.location}</div>
                 <div class="edit-remove-buttons">
                     <button class="edit-button">Edit</button>
-                    <button class="remove-button">Remove</button>
+                    <button class="remove-button" style="float: right;">Remove</button>
                 </div>
             `;
             li.dataset.item = JSON.stringify(item);
