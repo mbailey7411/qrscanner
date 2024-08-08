@@ -72,6 +72,17 @@
         #emailReportButton, #emailAuditButton, .email-button, .sms-button {
             background-color: var(--primary-color);
             color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        #emailReportButton:hover, #emailAuditButton:hover, .email-button:hover, .sms-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .inventory-section, .vendor-section {
@@ -115,7 +126,6 @@
             padding: 5px 10px;
             border-radius: 3px;
             cursor: pointer;
-            margin-left: 10px;
         }
 
         .vendor-button-container, .edit-remove-buttons {
@@ -170,7 +180,7 @@
         }
 
         .form-group label {
-            flex: 0 0 150px;
+            flex: 0 0 100px;
             margin-right: 10px;
             font-weight: bold;
         }
@@ -248,13 +258,13 @@
                 <label for="location">Location</label>
                 <input type="text" id="location" name="location" required>
             </div>
-            <button type="button" id="addItemButton">Add Item</button>
+            <div class="button-container">
+                <button type="button" id="addItemButton">Add Item</button>
+                <button id="sortLocationButton">Sort by Location</button>
+                <button id="sortDateButton">Sort by Date</button>
+            </div>
         </form>
         <ul id="auditList"></ul>
-        <div class="button-container">
-            <button id="sortLocationButton">Sort by Location</button>
-            <button id="sortDateButton">Sort by Date</button>
-        </div>
         <div class="email-button-container">
             <button id="emailAuditButton" class="email-button">Email Audit Report</button>
         </div>
