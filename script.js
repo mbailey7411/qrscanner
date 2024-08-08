@@ -396,3 +396,4 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
     }
 });
+ 
