@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (scanning && html5QrCode) {
             html5QrCode.stop().then(() => {
+                scanning = false;
                 html5QrCode.clear();
                 html5QrCode = null;
                 showScreen(screen);
