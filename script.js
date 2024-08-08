@@ -141,10 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             playBeep();
             showNotification();
-            restartScanner();
         } else {
             console.log('Item already scanned:', decodedText);
-            restartScanner();
         }
     }
 
@@ -225,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         auditList.appendChild(li);
         auditForm.reset();
+        restartScanner();
     }
 
     function editItem(li) {
@@ -236,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('labeled').value = item.labeled;
         document.getElementById('location').value = item.location;
         li.remove();
+        restartScanner();
     }
 
     function sortList(criteria) {
