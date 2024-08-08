@@ -1,24 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let html5QrCodeReturn;
-    let html5QrCodeAudit;
+    let html5QrCode;
     const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
-    let scanning = false;
-    let currentScanner;
-
-    const startButton = document.getElementById('startButton');
-    const stopButton = document.getElementById('stopButton');
-    const emailReportButton = document.getElementById('emailReportButton');
-    const inventoryEmailButton = document.getElementById('inventoryEmailButton');
-    const inventorySmsButton = document.getElementById('inventorySmsButton');
-    const inventoryList = document.getElementById('inventoryList');
-    const notification = document.getElementById('notification');
-    const inventorySection = document.getElementById('inventorySection');
 
     const returnPartsButton = document.getElementById('returnPartsButton');
     const auditPartsButton = document.getElementById('auditPartsButton');
     const mainScreen = document.getElementById('mainScreen');
     const returnPartsScreen = document.getElementById('returnPartsScreen');
     const auditPartsScreen = document.getElementById('auditPartsScreen');
+
+    const emailReportButton = document.getElementById('emailReportButton');
+    const inventoryEmailButton = document.getElementById('inventoryEmailButton');
+    const inventorySmsButton = document.getElementById('inventorySmsButton');
+    const inventoryList = document.getElementById('inventoryList');
+    const notification = document.getElementById('notification');
+    const inventorySection = document.getElementById('inventorySection');
 
     const auditForm = document.getElementById('auditForm');
     const addItemButton = document.getElementById('addItemButton');
@@ -38,8 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     returnPartsButton.addEventListener('click', () => switchScreen('returnParts'));
     auditPartsButton.addEventListener('click', () => switchScreen('auditParts'));
-    stopButton.addEventListener('click', () => stopScanning(currentScanner));
-    startButton.addEventListener('click', () => startScanning(currentScanner));
     emailReportButton.addEventListener('click', sendEmailReport);
     inventoryEmailButton.addEventListener('click', sendInventoryEmailReport);
     inventorySmsButton.addEventListener('click', sendInventorySmsReport);
@@ -53,95 +46,43 @@ document.addEventListener('DOMContentLoaded', () => {
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
 
-        if (scanning) {
-            stopScanning(currentScanner).then(() => {
-                showScreen(screen);
-            }).catch(err => {
-                console.error('Error stopping scanner:', err);
-                showScreen(screen);
-            });
-        } else {
-            showScreen(screen);
-        }
-    }
-
-    function showScreen(screen) {
         if (screen === 'returnParts') {
             returnPartsScreen.classList.remove('hidden');
-            currentScanner = html5QrCodeReturn;
-            initScanner('returnParts');
+            startScanner('qr-reader');
         } else if (screen === 'auditParts') {
             auditPartsScreen.classList.remove('hidden');
-            currentScanner = html5QrCodeAudit;
-            initScanner('auditParts');
+            startScanner('qr-reader-audit');
         }
     }
 
-    function initScanner(type) {
-        if (type === 'returnParts') {
-            html5QrCodeReturn = new Html5Qrcode("qr-reader");
-            startScanning(html5QrCodeReturn);
-        } else if (type === 'auditParts') {
-            html5QrCodeAudit = new Html5Qrcode("qr-reader-audit");
-            startScanning(html5QrCodeAudit);
-        }
-    }
-
-    function startScanning(scanner) {
-        if (!scanning) {
-            scanner.start(
-                { facingMode: "environment" },
-                qrConfig,
-                onScanSuccess,
-                onScanError
-            ).then(() => {
-                scanning = true;
-                stopButton.disabled = false;
-                startButton.disabled = true;
+    function startScanner(elementId) {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = new Html5Qrcode(elementId);
+                html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanError);
             }).catch(err => {
-                console.error('Error starting scanner:', err);
-                alert('Error starting scanner. Please try again.');
+                console.error('Error stopping scanner:', err);
             });
+        } else {
+            html5QrCode = new Html5Qrcode(elementId);
+            html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanError);
         }
-    }
-
-    function stopScanning(scanner) {
-        return new Promise((resolve, reject) => {
-            if (scanning && scanner) {
-                scanner.stop().then(() => {
-                    scanner.clear();
-                    scanning = false;
-                    stopButton.disabled = true;
-                    startButton.disabled = false;
-                    resolve();
-                }).catch(err => reject(err));
-            } else {
-                resolve();
-            }
-        });
     }
 
     function onScanSuccess(decodedText) {
         console.log('Scanned item:', decodedText);
         if (!scannedItems.has(decodedText)) {
             scannedItems.add(decodedText);
-            if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
-                handleAuditScan(decodedText);
-            } else {
+            if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
                 addItemToList(decodedText);
+            } else {
+                handleAuditScan(decodedText);
             }
             playBeep();
             showNotification();
         } else {
             console.log('Item already scanned:', decodedText);
-        }
-    }
-
-    function restartScanner() {
-        if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
-            startScanning(html5QrCodeAudit);
-        } else {
-            startScanning(html5QrCodeReturn);
         }
     }
 
@@ -162,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('order').value = fields.order || '';
         document.getElementById('labeled').value = fields.labeled || '';
         document.getElementById('location').value = '';
-        restartScanner();
     }
 
     function addItem() {
@@ -454,25 +394,5 @@ document.addEventListener('DOMContentLoaded', () => {
         const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
 
         window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
-    }
-
-    function sendInventoryEmailReport() {
-        const items = Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent);
-
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        const subject = encodeURIComponent('Inventory Report');
-        const body = encodeURIComponent(report);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
-
-    function sendInventorySmsReport() {
-        const items = Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent);
-
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        window.location.href = `sms:?body=${encodeURIComponent(report)}`;
     }
 });
