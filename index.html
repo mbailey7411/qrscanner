@@ -48,18 +48,6 @@
             margin: 0;
         }
 
-        h2 {
-            color: var(--primary-color);
-            text-align: center;
-            margin: 10px 0;
-        }
-
-        #qr-reader, #qr-reader-audit {
-            width: 100%;
-            max-width: 500px;
-            margin: 20px 0;
-        }
-
         .button-container {
             display: flex;
             justify-content: space-between;
@@ -67,7 +55,7 @@
             margin-bottom: 20px;
         }
 
-        button {
+        #returnPartsButton, #auditPartsButton {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -76,30 +64,30 @@
             transition: all 0.3s ease;
         }
 
-        button:hover {
+        #returnPartsButton:hover, #auditPartsButton:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        #emailReportButton {
+        #emailReportButton, #emailAuditButton, .email-button, .sms-button {
             background-color: var(--primary-color);
             color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
-        .email-button {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .sms-button {
-            background-color: var(--secondary-color);
-            color: white;
-            margin-left: auto;
+        #emailReportButton:hover, #emailAuditButton:hover, .email-button:hover, .sms-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .inventory-section, .vendor-section {
             width: 100%;
-            max-width: 500px;
+            max-width: 800px;
             margin-top: 20px;
             padding: 10px;
             background-color: rgba(52, 152, 219, 0.1);
@@ -123,7 +111,7 @@
             border-radius: 5px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            align-items: flex-start;
         }
 
         .item-content {
@@ -140,16 +128,7 @@
             cursor: pointer;
         }
 
-        .edit-button {
-            background-color: #f39c12;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .vendor-button-container {
+        .vendor-button-container, .edit-remove-buttons {
             display: flex;
             justify-content: space-between;
         }
@@ -176,11 +155,11 @@
                 padding: 10px;
             }
 
-            h1, h2 {
+            .header h1 {
                 font-size: 24px;
             }
 
-            button {
+            #returnPartsButton, #auditPartsButton {
                 padding: 8px 16px;
                 font-size: 14px;
             }
@@ -196,23 +175,33 @@
 
         .form-group {
             display: flex;
-            flex-direction: column;
-            margin-bottom: 15px;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
         .form-group label {
+            flex: 0 0 100px;
+            margin-right: 10px;
             font-weight: bold;
-            margin-bottom: 5px;
         }
 
-        #auditForm {
+        .form-group input {
+            flex: 1;
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        .email-button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #qr-reader, #qr-reader-audit {
             width: 100%;
             max-width: 500px;
-        }
-
-        .edit-remove-buttons {
-            display: flex;
-            justify-content: space-between;
+            height: 500px; /* Ensuring the scanner is a square */
+            margin: 20px 0;
         }
     </style>
 </head>
@@ -221,9 +210,12 @@
         <img src="2020-Logo-Color-150.png" alt="Logo">
         <h1>Warehouse QR Scanner</h1>
     </div>
-    <div id="mainScreen">
+    <div class="button-container">
         <button id="returnPartsButton">Return Parts</button>
         <button id="auditPartsButton">Audit Parts</button>
+    </div>
+    <div id="mainScreen">
+        <h2>Please select an option</h2>
     </div>
     <div id="returnPartsScreen" class="hidden">
         <div id="qr-reader"></div>
@@ -244,36 +236,38 @@
         <form id="auditForm">
             <div class="form-group">
                 <label for="customer">Customer</label>
-                <input type="text" id="customer">
+                <input type="text" id="customer" name="customer">
             </div>
             <div class="form-group">
                 <label for="part">Part</label>
-                <input type="text" id="part">
+                <input type="text" id="part" name="part">
             </div>
             <div class="form-group">
                 <label for="supplier">Supplier</label>
-                <input type="text" id="supplier">
+                <input type="text" id="supplier" name="supplier">
             </div>
             <div class="form-group">
                 <label for="order">Order</label>
-                <input type="text" id="order">
+                <input type="text" id="order" name="order">
             </div>
             <div class="form-group">
                 <label for="labeled">Labeled Date</label>
-                <input type="text" id="labeled">
+                <input type="text" id="labeled" name="labeled">
             </div>
             <div class="form-group">
                 <label for="location">Location</label>
-                <input type="text" id="location">
+                <input type="text" id="location" name="location" required>
             </div>
-            <button type="button" id="addItemButton">Add Item</button>
+            <div class="button-container">
+                <button type="button" id="addItemButton">Add Item</button>
+                <button id="sortLocationButton">Sort by Location</button>
+                <button id="sortDateButton">Sort by Date</button>
+            </div>
         </form>
-        <div class="button-container">
-            <button id="sortLocationButton">Sort by Location</button>
-            <button id="sortDateButton">Sort by Date</button>
-        </div>
         <ul id="auditList"></ul>
-        <button id="emailAuditButton">Email Audit Report</button>
+        <div class="email-button-container">
+            <button id="emailAuditButton" class="email-button">Email Audit Report</button>
+        </div>
     </div>
     <div id="notification">Item Scanned!</div>
     <script src="script.js"></script>
