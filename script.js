@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function onScanError(error) {
-        console.warn(`QR error: ${error}`);
+        console.warn(QR error: ${error});
     }
 
     function handleAuditScan(decodedText) {
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const li = document.createElement('li');
-        li.innerHTML = `
+        li.innerHTML = 
             <div><strong>Customer:</strong> ${item.customer}</div>
             <div><strong>Part:</strong> ${item.part}</div>
             <div><strong>Supplier:</strong> ${item.supplier}</div>
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button class="edit-button">Edit</button>
                 <button class="remove-button">Remove</button>
             </div>
-        `;
+        ;
         li.dataset.item = JSON.stringify(item);
 
         const editButton = li.querySelector('.edit-button');
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
         auditList.innerHTML = '';
         items.forEach(item => {
             const li = document.createElement('li');
-            li.innerHTML = `
+            li.innerHTML = 
                 <div><strong>Customer:</strong> ${item.customer}</div>
                 <div><strong>Part:</strong> ${item.part}</div>
                 <div><strong>Supplier:</strong> ${item.supplier}</div>
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <button class="edit-button">Edit</button>
                     <button class="remove-button">Remove</button>
                 </div>
-            `;
+            ;
             li.dataset.item = JSON.stringify(item);
 
             const editButton = li.querySelector('.edit-button');
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
         for (const vendor in vendorSections) {
             if (vendorSections[vendor].list.children.length > 0) {
-                report += `\n\n${vendor} Returns:\n\n`;
+                report += \n\n${vendor} Returns:\n\n;
                 report += Array.from(vendorSections[vendor].list.children)
                     .map(li => li.querySelector('.item-content').textContent)
                     .join('\n\n');
@@ -209,46 +209,46 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const subject = encodeURIComponent('Scan Report');
-        const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        const body = encodeURIComponent(${report}\n\n20/20 Auto Glass);
+        window.location.href = mailto:?subject=${subject}&body=${body};
     }
 
     function sendInventoryEmailReport() {
         const items = Array.from(inventoryList.children)
             .map(li => li.querySelector('.item-content').textContent);
 
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+        const report = Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass;
 
         const subject = encodeURIComponent('Inventory Report');
         const body = encodeURIComponent(report);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        window.location.href = mailto:?subject=${subject}&body=${body};
     }
 
     function sendInventorySmsReport() {
         const items = Array.from(inventoryList.children)
             .map(li => li.querySelector('.item-content').textContent);
 
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+        const report = Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass;
 
-        window.location.href = `sms:?body=${encodeURIComponent(report)}`;
+        window.location.href = sms:?body=${encodeURIComponent(report)};
     }
 
     function sendAuditEmailReport() {
         const items = Array.from(auditList.children)
             .map(li => JSON.parse(li.dataset.item))
-            .map(item => `
+            .map(item => 
                 Customer: ${item.customer}
                 Part: ${item.part}
                 Supplier: ${item.supplier}
                 Order: ${item.order}
                 Labeled: ${item.labeled}
                 Location: ${item.location}
-            `).join('\n\n');
+            ).join('\n\n');
 
-        const report = `Audit Parts:\n\n${items}\n\n20/20 Auto Glass`;
+        const report = Audit Parts:\n\n${items}\n\n20/20 Auto Glass;
         const subject = encodeURIComponent('Audit Parts Report');
         const body = encodeURIComponent(report);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        window.location.href = mailto:?subject=${subject}&body=${body};
     }
 
     function addItemToList(item) {
@@ -288,15 +288,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function createVendorSection(vendor) {
         const section = document.createElement('div');
-        section.id = `${vendor}Section`;
+        section.id = ${vendor}Section;
         section.className = 'vendor-section';
 
         const h2 = document.createElement('h2');
-        h2.textContent = `${vendor} Returns`;
+        h2.textContent = ${vendor} Returns;
         section.appendChild(h2);
 
         const list = document.createElement('ul');
-        list.id = `${vendor}List`;
+        list.id = ${vendor}List;
         list.className = 'vendor-list';
         section.appendChild(list);
 
@@ -304,16 +304,16 @@ document.addEventListener('DOMContentLoaded', function () {
         buttonContainer.className = 'vendor-button-container';
 
         const emailButton = document.createElement('button');
-        emailButton.id = `${vendor}EmailButton`;
+        emailButton.id = ${vendor}EmailButton;
         emailButton.className = 'vendor-button email-button';
-        emailButton.textContent = `Email ${vendor} Returns`;
+        emailButton.textContent = Email ${vendor} Returns;
         emailButton.onclick = () => emailVendorReturns(vendor);
         buttonContainer.appendChild(emailButton);
 
         const smsButton = document.createElement('button');
-        smsButton.id = `${vendor}SmsButton`;
+        smsButton.id = ${vendor}SmsButton;
         smsButton.className = 'vendor-button sms-button';
-        smsButton.textContent = `SMS ${vendor} Returns`;
+        smsButton.textContent = SMS ${vendor} Returns;
         smsButton.onclick = () => smsVendorReturns(vendor);
         buttonContainer.appendChild(smsButton);
 
