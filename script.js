@@ -66,32 +66,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-function onScanSuccess(decodedText) {
-    console.log('Scanned item:', decodedText);
-    if (!scannedItems.has(decodedText)) {
-        scannedItems.add(decodedText);
-        if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
-            addItemToReturnList(decodedText);
+    function onScanSuccess(decodedText) {
+        console.log('Scanned item:', decodedText);
+        if (!scannedItems.has(decodedText)) {
+            scannedItems.add(decodedText);
+            if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
+                addItemToReturnList(decodedText);
+            } else {
+                handleAuditScan(decodedText);
+            }
+            playBeep();
+            showNotification();
         } else {
-            handleAuditScan(decodedText);
+            console.log('Item already scanned:', decodedText);
         }
-        playBeep();
-        showNotification();
-    } else {
-        console.log('Item already scanned:', decodedText);
+        maintainLayoutConsistency(); // Ensure layout stays consistent after a scan
     }
-    // Ensure the layout is consistent after a scan
-    maintainLayoutConsistency();
-}
-
-function maintainLayoutConsistency() {
-    // Force camera and button alignment
-    document.getElementById('qr-reader').style.width = '100%';
-    document.getElementById('qr-reader').style.height = '500px';
-    document.getElementById('emailReportButton').style.width = '100%';
-    document.getElementById('emailReportButton').style.textAlign = 'center';
-}
-
 
     function onScanError(error) {
         console.warn(`QR error: ${error}`);
@@ -356,5 +346,27 @@ function maintainLayoutConsistency() {
         setTimeout(() => {
             notification.style.display = 'none';
         }, 2000);
+    }
+
+    function maintainLayoutConsistency() {
+        // Force camera and button alignment
+        const qrReader = document.getElementById('qr-reader');
+        const qrReaderAudit = document.getElementById('qr-reader-audit');
+
+        if (qrReader) {
+            qrReader.style.width = '100%';
+            qrReader.style.height = '500px';
+        }
+
+        if (qrReaderAudit) {
+            qrReaderAudit.style.width = '100%';
+            qrReaderAudit.style.height = '500px';
+        }
+
+        const emailReportButton = document.getElementById('emailReportButton');
+        if (emailReportButton) {
+            emailReportButton.style.width = '100%';
+            emailReportButton.style.textAlign = 'center';
+        }
     }
 });
