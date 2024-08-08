@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let html5QrCodeAudit;
     const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
     let scanning = false;
+    let currentScanner;
 
     const startButton = document.getElementById('startButton');
     const stopButton = document.getElementById('stopButton');
@@ -37,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     returnPartsButton.addEventListener('click', () => switchScreen('returnParts'));
     auditPartsButton.addEventListener('click', () => switchScreen('auditParts'));
-    stopButton.addEventListener('click', stopScanning);
-    startButton.addEventListener('click', startScanning);
+    stopButton.addEventListener('click', () => stopScanning(currentScanner));
+    startButton.addEventListener('click', () => startScanning(currentScanner));
     emailReportButton.addEventListener('click', sendEmailReport);
     inventoryEmailButton.addEventListener('click', sendInventoryEmailReport);
     inventorySmsButton.addEventListener('click', sendInventorySmsReport);
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auditPartsScreen.classList.add('hidden');
 
         if (scanning) {
-            stopScanning().then(() => {
+            stopScanning(currentScanner).then(() => {
                 showScreen(screen);
             }).catch(err => {
                 console.error('Error stopping scanner:', err);
@@ -67,9 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function showScreen(screen) {
         if (screen === 'returnParts') {
             returnPartsScreen.classList.remove('hidden');
+            currentScanner = html5QrCodeReturn;
             initScanner('returnParts');
         } else if (screen === 'auditParts') {
             auditPartsScreen.classList.remove('hidden');
+            currentScanner = html5QrCodeAudit;
             initScanner('auditParts');
         }
     }
@@ -102,28 +105,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function stopScanning() {
+    function stopScanning(scanner) {
         return new Promise((resolve, reject) => {
-            if (scanning) {
-                if (html5QrCodeReturn) {
-                    html5QrCodeReturn.stop().then(() => {
-                        html5QrCodeReturn.clear();
-                        html5QrCodeReturn = null;
-                        scanning = false;
-                        stopButton.disabled = true;
-                        startButton.disabled = false;
-                        resolve();
-                    }).catch(err => reject(err));
-                } else if (html5QrCodeAudit) {
-                    html5QrCodeAudit.stop().then(() => {
-                        html5QrCodeAudit.clear();
-                        html5QrCodeAudit = null;
-                        scanning = false;
-                        stopButton.disabled = true;
-                        startButton.disabled = false;
-                        resolve();
-                    }).catch(err => reject(err));
-                }
+            if (scanning && scanner) {
+                scanner.stop().then(() => {
+                    scanner.clear();
+                    scanning = false;
+                    stopButton.disabled = true;
+                    startButton.disabled = false;
+                    resolve();
+                }).catch(err => reject(err));
             } else {
                 resolve();
             }
