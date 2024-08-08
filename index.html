@@ -48,18 +48,6 @@
             margin: 0;
         }
 
-        h2 {
-            color: var(--primary-color);
-            text-align: center;
-            margin: 10px 0;
-        }
-
-        #qr-reader, #qr-reader-audit {
-            width: 100%;
-            max-width: 500px;
-            margin: 20px 0;
-        }
-
         .button-container {
             display: flex;
             justify-content: space-between;
@@ -67,7 +55,7 @@
             margin-bottom: 20px;
         }
 
-        button {
+        #returnPartsButton, #auditPartsButton {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -76,30 +64,19 @@
             transition: all 0.3s ease;
         }
 
-        button:hover {
+        #returnPartsButton:hover, #auditPartsButton:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        #emailReportButton {
+        #emailReportButton, #emailAuditButton, .email-button, .sms-button {
             background-color: var(--primary-color);
             color: white;
-        }
-
-        .email-button {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .sms-button {
-            background-color: var(--secondary-color);
-            color: white;
-            margin-left: auto;
         }
 
         .inventory-section, .vendor-section {
             width: 100%;
-            max-width: 500px;
+            max-width: 800px;
             margin-top: 20px;
             padding: 10px;
             background-color: rgba(52, 152, 219, 0.1);
@@ -110,13 +87,13 @@
             display: none;
         }
 
-        #inventoryList, .vendor-list {
+        #inventoryList, .vendor-list, #auditList {
             list-style-type: none;
             padding: 0;
             margin: 0;
         }
 
-        #inventoryList li, .vendor-list li {
+        #inventoryList li, .vendor-list li, #auditList li {
             background-color: white;
             margin-bottom: 10px;
             padding: 10px;
@@ -141,7 +118,7 @@
             margin-left: 10px;
         }
 
-        .vendor-button-container {
+        .vendor-button-container, .edit-remove-buttons {
             display: flex;
             justify-content: space-between;
         }
@@ -168,11 +145,11 @@
                 padding: 10px;
             }
 
-            h1, h2 {
+            .header h1 {
                 font-size: 24px;
             }
 
-            button {
+            #returnPartsButton, #auditPartsButton {
                 padding: 8px 16px;
                 font-size: 14px;
             }
@@ -187,31 +164,21 @@
         }
 
         .form-group {
+            display: flex;
+            align-items: center;
             margin-bottom: 10px;
         }
 
         .form-group label {
-            display: block;
-            margin-bottom: 5px;
+            flex: 0 0 150px;
+            margin-right: 10px;
             font-weight: bold;
         }
 
         .form-group input {
-            width: calc(100% - 10px);
+            flex: 1;
             padding: 5px;
             font-size: 16px;
-        }
-
-        .edit-remove-buttons {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        #auditList li {
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: white;
-            border-radius: 5px;
         }
 
         .email-button-container {
@@ -226,9 +193,12 @@
         <img src="2020-Logo-Color-150.png" alt="Logo">
         <h1>Warehouse QR Scanner</h1>
     </div>
-    <div id="mainScreen">
+    <div class="button-container">
         <button id="returnPartsButton">Return Parts</button>
         <button id="auditPartsButton">Audit Parts</button>
+    </div>
+    <div id="mainScreen">
+        <h2>Please select an option</h2>
     </div>
     <div id="returnPartsScreen" class="hidden">
         <div id="qr-reader"></div>
