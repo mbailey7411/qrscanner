@@ -12,69 +12,69 @@ document.addEventListener('DOMContentLoaded', function () {
     const inventoryEmailButton = document.getElementById('inventoryEmailButton');
     const inventorySmsButton = document.getElementById('inventorySmsButton');
     const inventoryList = document.getElementById('inventoryList');
-    const notification = document.getElementById('notification');
-    const inventorySection = document.getElementById('inventorySection');
-
     const auditForm = document.getElementById('auditForm');
-    const addItemButton = document.getElementById('addItemButton');
     const auditList = document.getElementById('auditList');
+    const addItemButton = document.getElementById('addItemButton');
     const sortLocationButton = document.getElementById('sortLocationButton');
     const sortDateButton = document.getElementById('sortDateButton');
     const emailAuditButton = document.getElementById('emailAuditButton');
 
     const scannedItems = new Set();
-    let audioContext;
-    const vendorSections = {};
-    const vendorContacts = {
-        'PGW': { email: 'RGrier@pgwautoglass.com', sms: '8645057843' },
-        'Pilkington': { email: ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], sms: ['8643039699', '8642010487'] },
-        'Mygrant': { email: 'poliver@mygrantglass.com', sms: '7045176639' }
-    };
+    const notification = document.getElementById('notification');
 
-    returnPartsButton.addEventListener('click', () => switchScreen('returnParts'));
-    auditPartsButton.addEventListener('click', () => switchScreen('auditParts'));
-    emailReportButton.addEventListener('click', sendEmailReport);
-    inventoryEmailButton.addEventListener('click', sendInventoryEmailReport);
-    inventorySmsButton.addEventListener('click', sendInventorySmsReport);
-    addItemButton.addEventListener('click', addItem);
-    sortLocationButton.addEventListener('click', () => sortList('location'));
-    sortDateButton.addEventListener('click', () => sortList('date'));
-    emailAuditButton.addEventListener('click', sendAuditEmailReport);
+    returnPartsButton.addEventListener('click', function () {
+        switchScreen('returnParts');
+    });
+
+    auditPartsButton.addEventListener('click', function () {
+        switchScreen('auditParts');
+    });
 
     function switchScreen(screen) {
         mainScreen.classList.add('hidden');
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
 
+        if (screen === 'returnParts') {
+            returnPartsScreen.classList.remove('hidden');
+            initScanner('qr-reader', onScanSuccess);
+        } else if (screen === 'auditParts') {
+            auditPartsScreen.classList.remove('hidden');
+            initScanner('qr-reader-audit', onScanAuditSuccess);
+        }
+    }
+
+    function initScanner(elementId, scanSuccessCallback) {
         if (html5QrCode) {
             html5QrCode.stop().then(() => {
                 html5QrCode.clear();
-                html5QrCode = new Html5Qrcode(screen === 'returnParts' ? 'qr-reader' : 'qr-reader-audit');
-                html5QrCode.start({ facingMode: "environment" }, html5QrCodeConfig, onScanSuccess, onScanError);
+                html5QrCode = null;
+                startScanner(elementId, scanSuccessCallback);
             }).catch(err => {
                 console.error('Error stopping scanner:', err);
             });
         } else {
-            html5QrCode = new Html5Qrcode(screen === 'returnParts' ? 'qr-reader' : 'qr-reader-audit');
-            html5QrCode.start({ facingMode: "environment" }, html5QrCodeConfig, onScanSuccess, onScanError);
-        }
-
-        if (screen === 'returnParts') {
-            returnPartsScreen.classList.remove('hidden');
-        } else if (screen === 'auditParts') {
-            auditPartsScreen.classList.remove('hidden');
+            startScanner(elementId, scanSuccessCallback);
         }
     }
 
+    function startScanner(elementId, scanSuccessCallback) {
+        html5QrCode = new Html5Qrcode(elementId);
+        html5QrCode.start(
+            { facingMode: "environment" },
+            html5QrCodeConfig,
+            scanSuccessCallback,
+            onScanError
+        ).catch(err => {
+            console.error('Error starting scanner:', err);
+            alert('Error starting scanner. Please try again.');
+        });
+    }
+
     function onScanSuccess(decodedText) {
-        console.log('Scanned item:', decodedText);
         if (!scannedItems.has(decodedText)) {
             scannedItems.add(decodedText);
-            if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
-                addItemToList(decodedText);
-            } else {
-                handleAuditScan(decodedText);
-            }
+            addItemToList(decodedText);
             playBeep();
             showNotification();
         } else {
@@ -82,26 +82,39 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function onScanAuditSuccess(decodedText) {
+        const data = parseAuditData(decodedText);
+        if (data) {
+            document.getElementById('customer').value = data.customer;
+            document.getElementById('part').value = data.part;
+            document.getElementById('supplier').value = data.supplier;
+            document.getElementById('order').value = data.order;
+            document.getElementById('labeled').value = data.labeled;
+        } else {
+            alert('Invalid QR code format for audit.');
+        }
+    }
+
     function onScanError(error) {
         console.warn(`QR error: ${error}`);
     }
 
-    function handleAuditScan(decodedText) {
-        const fields = decodedText.split(';').reduce((acc, field) => {
-            const [key, value] = field.split('=');
-            acc[key.toLowerCase()] = value;
-            return acc;
-        }, {});
-
-        document.getElementById('customer').value = fields.customer || '';
-        document.getElementById('part').value = fields.part || '';
-        document.getElementById('supplier').value = fields.supplier || '';
-        document.getElementById('order').value = fields.order || '';
-        document.getElementById('labeled').value = fields.labeled || '';
-        document.getElementById('location').value = '';
+    function parseAuditData(decodedText) {
+        const data = {};
+        const regex = /CUSTOMER=(.*);PART=(.*);SUPPLIER=(.*);ORDER=(.*);LABELED=(.*);/;
+        const match = decodedText.match(regex);
+        if (match) {
+            data.customer = match[1];
+            data.part = match[2];
+            data.supplier = match[3];
+            data.order = match[4];
+            data.labeled = match[5];
+            return data;
+        }
+        return null;
     }
 
-    function addItem() {
+    addItemButton.addEventListener('click', function () {
         const customer = document.getElementById('customer').value;
         const part = document.getElementById('part').value;
         const supplier = document.getElementById('supplier').value;
@@ -110,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const location = document.getElementById('location').value;
 
         if (!customer || !part || !supplier || !order || !labeled || !location) {
-            alert('All fields are required.');
+            alert('Please fill in all fields.');
             return;
         }
 
@@ -120,34 +133,28 @@ document.addEventListener('DOMContentLoaded', function () {
             supplier,
             order,
             labeled,
-            location,
-            added: new Date().toISOString()
+            location
         };
 
         const li = document.createElement('li');
+        li.dataset.item = JSON.stringify(item);
         li.innerHTML = `
-            <div><strong>Customer:</strong> ${item.customer}</div>
-            <div><strong>Part:</strong> ${item.part}</div>
-            <div><strong>Supplier:</strong> ${item.supplier}</div>
-            <div><strong>Order:</strong> ${item.order}</div>
-            <div><strong>Labeled:</strong> ${item.labeled}</div>
-            <div><strong>Location:</strong> ${item.location}</div>
+            <div>Customer: ${customer}</div>
+            <div>Part: ${part}</div>
+            <div>Supplier: ${supplier}</div>
+            <div>Order: ${order}</div>
+            <div>Labeled: ${labeled}</div>
+            <div>Location: ${location}</div>
             <div class="edit-remove-buttons">
                 <button class="edit-button">Edit</button>
-                <button class="remove-button">Remove</button>
+                <button class="remove-button" style="margin-left: auto;">Remove</button>
             </div>
         `;
-        li.dataset.item = JSON.stringify(item);
-
-        const editButton = li.querySelector('.edit-button');
-        editButton.addEventListener('click', () => editItem(li));
-
-        const removeButton = li.querySelector('.remove-button');
-        removeButton.addEventListener('click', () => li.remove());
-
         auditList.appendChild(li);
-        auditForm.reset();
-    }
+
+        li.querySelector('.edit-button').addEventListener('click', () => editItem(li));
+        li.querySelector('.remove-button').addEventListener('click', () => removeItem(li));
+    });
 
     function editItem(li) {
         const item = JSON.parse(li.dataset.item);
@@ -160,186 +167,36 @@ document.addEventListener('DOMContentLoaded', function () {
         li.remove();
     }
 
-    function sortList(criteria) {
-        const items = Array.from(auditList.children).map(li => JSON.parse(li.dataset.item));
+    function removeItem(li) {
+        li.remove();
+    }
+
+    sortLocationButton.addEventListener('click', function () {
+        sortList(auditList, 'location');
+    });
+
+    sortDateButton.addEventListener('click', function () {
+        sortList(auditList, 'labeled');
+    });
+
+    emailAuditButton.addEventListener('click', function () {
+        sendAuditEmailReport();
+    });
+
+    function sortList(list, key) {
+        const items = Array.from(list.children);
         items.sort((a, b) => {
-            if (criteria === 'location') return a.location.localeCompare(b.location);
-            if (criteria === 'date') return new Date(a.labeled) - new Date(b.labeled);
+            const itemA = JSON.parse(a.dataset.item);
+            const itemB = JSON.parse(b.dataset.item);
+            if (itemA[key] < itemB[key]) return -1;
+            if (itemA[key] > itemB[key]) return 1;
+            return 0;
         });
-        auditList.innerHTML = '';
-        items.forEach(item => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <div><strong>Customer:</strong> ${item.customer}</div>
-                <div><strong>Part:</strong> ${item.part}</div>
-                <div><strong>Supplier:</strong> ${item.supplier}</div>
-                <div><strong>Order:</strong> ${item.order}</div>
-                <div><strong>Labeled:</strong> ${item.labeled}</div>
-                <div><strong>Location:</strong> ${item.location}</div>
-                <div class="edit-remove-buttons">
-                    <button class="edit-button">Edit</button>
-                    <button class="remove-button" style="float: right;">Remove</button>
-                </div>
-            `;
-            li.dataset.item = JSON.stringify(item);
-
-            const editButton = li.querySelector('.edit-button');
-            editButton.addEventListener('click', () => editItem(li));
-
-            const removeButton = li.querySelector('.remove-button');
-            removeButton.addEventListener('click', () => li.remove());
-
-            auditList.appendChild(li);
-        });
-    }
-
-    function sendEmailReport() {
-        let report = 'Inventory Items:\n\n';
-        report += Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent)
-            .join('\n\n');
-    
-        for (const vendor in vendorSections) {
-            if (vendorSections[vendor].list.children.length > 0) {
-                report += `\n\n${vendor} Returns:\n\n`;
-                report += Array.from(vendorSections[vendor].list.children)
-                    .map(li => li.querySelector('.item-content').textContent)
-                    .join('\n\n');
-            }
-        }
-
-        const subject = encodeURIComponent('Scan Report');
-        const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
-
-    function sendInventoryEmailReport() {
-        const items = Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent);
-
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        const subject = encodeURIComponent('Inventory Report');
-        const body = encodeURIComponent(report);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
-
-    function sendInventorySmsReport() {
-        const items = Array.from(inventoryList.children)
-            .map(li => li.querySelector('.item-content').textContent);
-
-        const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
-        window.location.href = `sms:?body=${encodeURIComponent(report)}`;
-    }
-
-    function sendAuditEmailReport() {
-        const items = Array.from(auditList.children)
-            .map(li => JSON.parse(li.dataset.item))
-            .map(item => `
-                Customer: ${item.customer}
-                Part: ${item.part}
-                Supplier: ${item.supplier}
-                Order: ${item.order}
-                Labeled: ${item.labeled}
-                Location: ${item.location}
-            `).join('\n\n');
-
-        const report = `Audit Parts:\n\n${items}\n\n20/20 Auto Glass`;
-        const subject = encodeURIComponent('Audit Parts Report');
-        const body = encodeURIComponent(report);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
-
-    function addItemToList(item) {
-        const lines = item.split('\n');
-        const firstLine = lines[0].trim();
-        const isReturn = firstLine.includes('Return');
-        let vendor = isReturn ? firstLine.split(' ')[0] : null;
-
-        const li = document.createElement('li');
-        const itemContent = document.createElement('span');
-        itemContent.className = 'item-content';
-        itemContent.textContent = item;
-
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        removeButton.className = 'remove-button';
-        removeButton.onclick = () => {
-            li.remove();
-            scannedItems.delete(item);
-            updateVendorSectionVisibility();
-        };
-
-        li.appendChild(itemContent);
-        li.appendChild(removeButton);
-
-        if (isReturn) {
-            if (!vendorSections[vendor]) {
-                createVendorSection(vendor);
-            }
-            vendorSections[vendor].list.appendChild(li);
-            vendorSections[vendor].section.style.display = 'block';
-        } else {
-            inventoryList.appendChild(li);
-            inventorySection.style.display = 'block';
-        }
-    }
-
-    function createVendorSection(vendor) {
-        const section = document.createElement('div');
-        section.id = `${vendor}Section`;
-        section.className = 'vendor-section';
-
-        const h2 = document.createElement('h2');
-        h2.textContent = `${vendor} Returns`;
-        section.appendChild(h2);
-
-        const list = document.createElement('ul');
-        list.id = `${vendor}List`;
-        list.className = 'vendor-list';
-        section.appendChild(list);
-
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'vendor-button-container';
-
-        const emailButton = document.createElement('button');
-        emailButton.id = `${vendor}EmailButton`;
-        emailButton.className = 'vendor-button email-button';
-        emailButton.textContent = `Email ${vendor} Returns`;
-        emailButton.onclick = () => emailVendorReturns(vendor);
-        buttonContainer.appendChild(emailButton);
-
-        const smsButton = document.createElement('button');
-        smsButton.id = `${vendor}SmsButton`;
-        smsButton.className = 'vendor-button sms-button';
-        smsButton.textContent = `SMS ${vendor} Returns`;
-        smsButton.onclick = () => smsVendorReturns(vendor);
-        buttonContainer.appendChild(smsButton);
-
-        section.appendChild(buttonContainer);
-        document.body.appendChild(section);
-
-        vendorSections[vendor] = { section, list, emailButton, smsButton };
-    }
-
-    function updateVendorSectionVisibility() {
-        inventorySection.style.display =
-            inventoryList.children.length > 0 ? 'block' : 'none';
-
-        for (const vendor in vendorSections) {
-            vendorSections[vendor].section.style.display =
-                vendorSections[vendor].list.children.length > 0 ? 'block' : 'none';
-        }
-    }
-
-    function initAudio() {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        items.forEach(item => list.appendChild(item));
     }
 
     function playBeep() {
-        if (!audioContext) initAudio();
-
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 
