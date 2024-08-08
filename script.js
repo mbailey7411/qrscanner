@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('order').value = fields.order || '';
         document.getElementById('labeled').value = fields.labeled || '';
         document.getElementById('location').value = '';
+        restartScanner();
     }
 
     function addItem() {
