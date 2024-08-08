@@ -70,10 +70,10 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Scanned item:', decodedText);
         if (!scannedItems.has(decodedText)) {
             scannedItems.add(decodedText);
-            if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
-                handleAuditScan(decodedText);
-            } else {
+            if (document.getElementById('auditPartsScreen').classList.contains('hidden')) {
                 addItemToReturnList(decodedText);
+            } else {
+                handleAuditScan(decodedText);
             }
             playBeep();
             showNotification();
