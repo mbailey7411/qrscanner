@@ -141,9 +141,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             playBeep();
             showNotification();
+            restartScanner();
         } else {
             console.log('Item already scanned:', decodedText);
+            restartScanner();
         }
+    }
+
+    function restartScanner() {
+        stopScanning().then(() => {
+            if (document.getElementById('returnPartsScreen').classList.contains('hidden')) {
+                startScanning(html5QrCodeAudit);
+            } else {
+                startScanning(html5QrCodeReturn);
+            }
+        }).catch(err => {
+            console.error('Error restarting scanner:', err);
+        });
     }
 
     function onScanError(error) {
