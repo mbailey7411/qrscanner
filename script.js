@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let html5QrCode;
+    let html5QrCodeReturn;
+    let html5QrCodeAudit;
     const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
     let scanning = false;
 
@@ -51,11 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         returnPartsScreen.classList.add('hidden');
         auditPartsScreen.classList.add('hidden');
 
-        if (scanning && html5QrCode) {
-            html5QrCode.stop().then(() => {
-                scanning = false;
-                html5QrCode.clear();
-                html5QrCode = null;
+        if (scanning) {
+            stopScanning().then(() => {
                 showScreen(screen);
             }).catch(err => {
                 console.error('Error stopping scanner:', err);
@@ -69,21 +67,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function showScreen(screen) {
         if (screen === 'returnParts') {
             returnPartsScreen.classList.remove('hidden');
-            initScanner('qr-reader');
+            initScanner('returnParts');
         } else if (screen === 'auditParts') {
             auditPartsScreen.classList.remove('hidden');
-            initScanner('qr-reader-audit');
+            initScanner('auditParts');
         }
     }
 
-    function initScanner(elementId) {
-        html5QrCode = new Html5Qrcode(elementId);
-        startScanning();
+    function initScanner(type) {
+        if (type === 'returnParts') {
+            html5QrCodeReturn = new Html5Qrcode("qr-reader");
+            startScanning(html5QrCodeReturn);
+        } else if (type === 'auditParts') {
+            html5QrCodeAudit = new Html5Qrcode("qr-reader-audit");
+            startScanning(html5QrCodeAudit);
+        }
     }
 
-    function startScanning() {
-        if (!scanning && html5QrCode) {
-            html5QrCode.start(
+    function startScanning(scanner) {
+        if (!scanning) {
+            scanner.start(
                 { facingMode: "environment" },
                 qrConfig,
                 onScanSuccess,
@@ -100,13 +103,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function stopScanning() {
-        if (scanning && html5QrCode) {
-            html5QrCode.stop().then(() => {
-                scanning = false;
-                stopButton.disabled = true;
-                startButton.disabled = false;
-            }).catch(err => console.error('Error stopping scanner:', err));
-        }
+        return new Promise((resolve, reject) => {
+            if (scanning) {
+                if (html5QrCodeReturn) {
+                    html5QrCodeReturn.stop().then(() => {
+                        html5QrCodeReturn.clear();
+                        html5QrCodeReturn = null;
+                        scanning = false;
+                        stopButton.disabled = true;
+                        startButton.disabled = false;
+                        resolve();
+                    }).catch(err => reject(err));
+                } else if (html5QrCodeAudit) {
+                    html5QrCodeAudit.stop().then(() => {
+                        html5QrCodeAudit.clear();
+                        html5QrCodeAudit = null;
+                        scanning = false;
+                        stopButton.disabled = true;
+                        startButton.disabled = false;
+                        resolve();
+                    }).catch(err => reject(err));
+                }
+            } else {
+                resolve();
+            }
+        });
     }
 
     function onScanSuccess(decodedText) {
