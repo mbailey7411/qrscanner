@@ -14,10 +14,10 @@
             --secondary-color: #2ecc71;
             --background-color: #ecf0f1;
             --text-color: #34495e;
-            --vendor-pgw: #e74c3c;
-            --vendor-pilkington: #f39c12;
-            --vendor-mygrant: #9b59b6;
-            --vendor-other: #1abc9c;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         body {
@@ -124,26 +124,42 @@
         #inventoryList li, .vendor-list li {
             background-color: white;
             margin-bottom: 10px;
-            padding: 10px;
+            padding: 8px 8px;
             border-radius: 5px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column; /* Ensure vertical stacking */
             align-items: flex-start;
+            line-height: 1.2;
         }
 
         .item-content {
+            white-space: normal;
+            word-break: break-word;
+            margin: 0;
+        }
+
+        .return-item-content {
             white-space: pre-wrap;
             word-break: break-word;
+            margin: 0;
+        }
+
+        .location-text {
+            font-style: italic;
+            color: var(--secondary-color);
+            margin-top: 5px;
+            font-size: 14px;
         }
 
         .remove-button {
+            align-self: flex-end; /* Align the remove button to the right */
             background-color: #e74c3c;
             color: white;
             border: none;
             padding: 5px 10px;
             border-radius: 3px;
             cursor: pointer;
-            margin-left: 10px;
+            margin-top: 10px; /* Add margin to separate from content */
         }
 
         .vendor-button-container {
@@ -166,6 +182,35 @@
         @keyframes fadeInOut {
             0%, 100% { opacity: 0; }
             10%, 90% { opacity: 1; }
+        }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4); 
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
         }
 
         @media (max-width: 600px) {
@@ -201,20 +246,33 @@
     </div>
 
     <div id="inventorySection" class="inventory-section">
-        <h2>Inventory Items</h2>
+        <h2>Audit Items</h2>
         <ul id="inventoryList"></ul>
         <div class="button-container">
-            <button id="inventoryEmailButton" class="email-button" aria-label="Email Inventory Report">Email Inventory Report</button>
-            <button id="inventorySmsButton" class="sms-button" aria-label="SMS Inventory Report">SMS Inventory Report</button>
+            <button id="inventoryEmailButton" class="email-button" aria-label="Email Audit Report">Email Audit Report</button>
+            <button id="inventorySmsButton" class="sms-button" aria-label="SMS Audit Report">SMS Audit Report</button>
         </div>
     </div>
 
     <div id="notification">Item Scanned!</div>
 
+    <!-- Modal for location input -->
+    <div id="locationModal" class="modal">
+        <div class="modal-content">
+            <h2>Enter Item Location</h2>
+            <input type="text" id="locationInput" placeholder="Enter location">
+            <div class="modal-buttons">
+                <button id="skipButton" aria-label="Skip Location">Skip</button>
+                <button id="saveButton" aria-label="Save Location">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const html5QrCode = new Html5Qrcode("qr-reader");
         const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
         let scanning = false;
+        let currentLiElement = null; // Variable to hold the current list item being edited
 
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
@@ -225,6 +283,11 @@
         const notification = document.getElementById('notification');
         const inventorySection = document.getElementById('inventorySection');
 
+        const locationModal = document.getElementById('locationModal');
+        const locationInput = document.getElementById('locationInput');
+        const skipButton = document.getElementById('skipButton');
+        const saveButton = document.getElementById('saveButton');
+
         const scannedItems = new Set();
         let audioContext;
         const vendorSections = {};
@@ -234,13 +297,22 @@
             'Mygrant': { email: 'poliver@mygrantglass.com', sms: '7045176639' }
         };
 
+        window.addEventListener('load', initScanner);
+        window.addEventListener('beforeunload', stopScanning); // Stop the camera on unload
+
         stopButton.addEventListener('click', stopScanning);
         startButton.addEventListener('click', startScanning);
         emailReportButton.addEventListener('click', sendEmailReport);
         inventoryEmailButton.addEventListener('click', sendInventoryEmailReport);
         inventorySmsButton.addEventListener('click', sendInventorySmsReport);
 
-        window.addEventListener('load', initScanner);
+        skipButton.addEventListener('click', () => {
+            closeModal();
+        });
+
+        saveButton.addEventListener('click', () => {
+            saveLocation();
+        });
 
         function initScanner() {
             startScanning();
@@ -291,15 +363,36 @@
         }
 
         function addItemToList(item) {
-            const lines = item.split('\n');
-            const firstLine = lines[0].trim();
-            const isReturn = firstLine.includes('Return');
-            let vendor = isReturn ? firstLine.split(' ')[0] : null;
+            const isReturn = item.includes('Return');
 
             const li = document.createElement('li');
             const itemContent = document.createElement('span');
-            itemContent.className = 'item-content';
-            itemContent.textContent = item;
+            li.appendChild(itemContent);
+
+            if (isReturn) {
+                itemContent.className = 'return-item-content';
+                itemContent.innerHTML = item.replace(/\n/g, '<br>'); // Preserve line breaks
+
+                const vendor = extractVendorFromReturnItem(item);
+                if (vendor && !vendorSections[vendor]) {
+                    createVendorSection(vendor);
+                }
+                vendorSections[vendor].list.appendChild(li);
+                vendorSections[vendor].section.style.display = 'block';
+            } else {
+                itemContent.className = 'item-content';
+                const itemDetails = parseQRContent(item);
+                itemContent.innerHTML = `
+                    <strong>Customer:</strong> ${itemDetails.CUSTOMER || 'N/A'}<br>
+                    <strong>Part:</strong> ${itemDetails.PART || 'N/A'}<br>
+                    <strong>Supplier:</strong> ${itemDetails.SUPPLIER || 'N/A'}<br>
+                    <strong>Order:</strong> ${itemDetails.ORDER || 'N/A'}<br>
+                    <strong>Labeled:</strong> ${itemDetails.LABELED || 'N/A'}
+                `;
+                inventoryList.appendChild(li);
+                inventorySection.style.display = 'block';
+                showModal(li); // Show modal for location input
+            }
 
             const removeButton = document.createElement('button');
             removeButton.textContent = 'Remove';
@@ -310,19 +403,44 @@
                 updateVendorSectionVisibility();
             };
 
-            li.appendChild(itemContent);
             li.appendChild(removeButton);
+        }
 
-            if (isReturn) {
-                if (!vendorSections[vendor]) {
-                    createVendorSection(vendor);
-                }
-                vendorSections[vendor].list.appendChild(li);
-                vendorSections[vendor].section.style.display = 'block';
-            } else {
-                inventoryList.appendChild(li);
-                inventorySection.style.display = 'block';
+        function showModal(li) {
+            currentLiElement = li; // Store reference to the current list item
+            locationInput.value = ''; // Clear the input field
+            locationModal.style.display = 'flex'; // Show the modal
+        }
+
+        function closeModal() {
+            locationModal.style.display = 'none'; // Hide the modal
+            currentLiElement = null; // Clear the reference to the current list item
+        }
+
+        function saveLocation() {
+            const location = locationInput.value.trim();
+            if (location && currentLiElement) {
+                const locationText = document.createElement('div');
+                locationText.className = 'location-text';
+                locationText.textContent = `Location: ${location}`;
+                currentLiElement.querySelector('.item-content').appendChild(locationText);
             }
+            closeModal(); // Close the modal
+        }
+
+        function parseQRContent(content) {
+            const details = {};
+            content.split(';').forEach(pair => {
+                const [key, value] = pair.split('=');
+                details[key.trim()] = value ? value.trim() : '';
+            });
+            return details;
+        }
+
+        function extractVendorFromReturnItem(item) {
+            const lines = item.split('\n');
+            const firstLine = lines[0].trim();
+            return firstLine.split(' ')[0];
         }
 
         function createVendorSection(vendor) {
@@ -373,49 +491,66 @@
         }
 
         function sendEmailReport() {
-            let report = 'Inventory Items:\n\n';
+            stopScanning(); // Stop the scanner before sending the email
+
+            let report = 'Audit Items:\n\n';
             report += Array.from(inventoryList.children)
-                .map(li => li.querySelector('.item-content').textContent)
+                .map(li => li.querySelector('.item-content').textContent.trim())
                 .join('\n\n');
         
             for (const vendor in vendorSections) {
                 if (vendorSections[vendor].list.children.length > 0) {
                     report += `\n\n${vendor} Returns:\n\n`;
                     report += Array.from(vendorSections[vendor].list.children)
-                        .map(li => li.querySelector('.item-content').textContent)
+                        .map(li => li.querySelector('.return-item-content').innerHTML.trim().replace(/<br>/g, '\n'))
                         .join('\n\n');
+                }
             }
+
+            const subject = encodeURIComponent('Scan Report');
+            const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+
+            startScanning(); // Restart the scanner after the email is sent
         }
 
-    const subject = encodeURIComponent('Scan Report');
-    const body = encodeURIComponent(`${report}\n\n20/20 Auto Glass`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-}
-
-
         function sendInventoryEmailReport() {
+            stopScanning(); // Stop the scanner before sending the email
+
             const items = Array.from(inventoryList.children)
-                .map(li => li.querySelector('.item-content').textContent);
+                .map(li => li.querySelector('.item-content').textContent.trim());
 
-            const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+            const report = `Audit Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
-            const subject = encodeURIComponent('Inventory Report');
+            const subject = encodeURIComponent('Audit Report');
             const body = encodeURIComponent(report);
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
+
+            startScanning(); // Restart the scanner after the email is sent
         }
 
         function sendInventorySmsReport() {
-            const items = Array.from(inventoryList.children)
-                .map(li => li.querySelector('.item-content').textContent);
+            stopScanning(); // Stop the scanner before sending the SMS
 
-            const report = `Inventory Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+            const items = Array.from(inventoryList.children)
+                .map(li => {
+                    let content = li.querySelector('.item-content').textContent.trim();
+                    content = content.split('\n').map(line => line.trim()).join('\n'); // Remove leading spaces from each line
+                    return content;
+                });
+
+            const report = `Audit Items:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
             window.location.href = `sms:?body=${encodeURIComponent(report)}`;
+
+            startScanning(); // Restart the scanner after the SMS is sent
         }
 
         function emailVendorReturns(vendor) {
+            stopScanning(); // Stop the scanner before sending the email
+
             const items = Array.from(vendorSections[vendor].list.children)
-                .map(li => li.querySelector('.item-content').textContent);
+                .map(li => li.querySelector('.return-item-content').innerHTML.trim().replace(/<br>/g, '\n'));
 
             const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
@@ -430,19 +565,25 @@
             }
 
             window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
+
+            startScanning(); // Restart the scanner after the email is sent
         }
 
-        function smsVendorReturns(vendor) {
-            const items = Array.from(vendorSections[vendor].list.children)
-                .map(li => li.querySelector('.item-content').textContent);
+function smsVendorReturns(vendor) {
+    stopScanning(); // Stop the scanner before sending the SMS
 
-            const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+    const items = Array.from(vendorSections[vendor].list.children)
+        .map(li => li.querySelector('.return-item-content').innerHTML.trim().replace(/<br>/g, '\n'));
 
-            const smsNumbers = vendorContacts[vendor]?.sms || '';
-            const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
+    const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
-            window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
-        }
+    const smsNumbers = vendorContacts[vendor]?.sms || '';
+    const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
+
+    window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
+
+    startScanning(); // Restart the scanner after the SMS is sent
+}
 
         function initAudio() {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
