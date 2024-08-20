@@ -294,14 +294,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function emailVendorReturns(vendor) {
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
-
+    
         const report = `${vendor} Returns:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
         const subject = encodeURIComponent(`${vendor} Returns Report`);
         const body = encodeURIComponent(report);
-        const emails = Array.isArray(vendorContacts[vendor].email) ? vendorContacts[vendor].email : [vendorContacts[vendor].email];
-        emails.forEach(email => {
-            window.open(`mailto:${email}?subject=${subject}&body=${body}`);
-        });
+    
+        const emails = Array.isArray(vendorContacts[vendor].email) ? vendorContacts[vendor].email.join(',') : vendorContacts[vendor].email;
+    
+        window.open(`mailto:${emails}?subject=${subject}&body=${body}`);
     }
 
     function smsVendorReturns(vendor) {
