@@ -292,20 +292,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function emailVendorReturns(vendor) {
-        console.log('Vendor:', vendor);
-        console.log('Emails:', vendorContacts[vendor].email);
+        alert('Vendor: ' + vendor);
+        alert('Emails: ' + vendorContacts[vendor].email.join(','));
     
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
-    
-        console.log('Items:', items);
-    
+        
         const report = `${vendor} Returns:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
         const subject = encodeURIComponent(`${vendor} Returns Report`);
         const body = encodeURIComponent(report);
         
         const emails = vendorContacts[vendor].email.join(',');
-        console.log('Final mailto link:', `mailto:${emails}?subject=${subject}&body=${body}`);
+        alert('Final mailto link: mailto:' + emails + '?subject=' + subject + '&body=' + body);
         
         window.open(`mailto:${emails}?subject=${subject}&body=${body}`);
     }
