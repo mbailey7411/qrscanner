@@ -268,6 +268,11 @@
         </div>
     </div>
 
+    <!-- Debug Notification Area -->
+    <div id="debugNotification" style="display:none; background-color: yellow; padding: 10px; margin-top: 10px;">
+        <p id="debugMessage"></p>
+    </div>
+
     <script>
         const html5QrCode = new Html5Qrcode("qr-reader");
         const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
@@ -294,7 +299,7 @@
         const vendorContacts = {
             'PGW': { email: 'RGrier@pgwautoglass.com', sms: '8645057843' },
             'Pilkington': { email: ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], sms: ['8643039699', '8642010487'] },
-            'Mygrant': { email: 'poliver@mygrantglass.com', sms: '7045176639' }
+            'Mygrant': { email: ['poliver@mygrantglass.com', 'cgoines@mygrantglass.com'], sms: '7045176639' }
         };
 
         window.addEventListener('load', initScanner);
@@ -564,26 +569,30 @@
                 email = email[0];
             }
 
+            // Display the debugging messages
+            showDebugMessage(`Primary Email: ${email}<br>CC Emails: ${ccEmail}`);
+
+            // Open the email client
             window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
 
             startScanning(); // Restart the scanner after the email is sent
         }
 
-function smsVendorReturns(vendor) {
-    stopScanning(); // Stop the scanner before sending the SMS
+        function smsVendorReturns(vendor) {
+            stopScanning(); // Stop the scanner before sending the SMS
 
-    const items = Array.from(vendorSections[vendor].list.children)
-        .map(li => li.querySelector('.return-item-content').innerHTML.trim().replace(/<br>/g, '\n'));
+            const items = Array.from(vendorSections[vendor].list.children)
+                .map(li => li.querySelector('.return-item-content').innerHTML.trim().replace(/<br>/g, '\n'));
 
-    const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+            const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
 
-    const smsNumbers = vendorContacts[vendor]?.sms || '';
-    const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
+            const smsNumbers = vendorContacts[vendor]?.sms || '';
+            const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
 
-    window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
+            window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
 
-    startScanning(); // Restart the scanner after the SMS is sent
-}
+            startScanning(); // Restart the scanner after the SMS is sent
+        }
 
         function initAudio() {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -611,6 +620,14 @@ function smsVendorReturns(vendor) {
             setTimeout(() => {
                 notification.style.display = 'none';
             }, 2000);
+        }
+
+        // Function to display debug messages
+        function showDebugMessage(message) {
+            const debugNotification = document.getElementById('debugNotification');
+            const debugMessage = document.getElementById('debugMessage');
+            debugMessage.innerHTML = message;
+            debugNotification.style.display = 'block';
         }
     </script>
 </body>
