@@ -291,6 +291,13 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
     
+    function showDebugMessage(message) {
+        const debugNotification = document.getElementById('debugNotification');
+        const debugMessage = document.getElementById('debugMessage');
+        debugMessage.innerHTML = message;
+        debugNotification.style.display = 'block';
+    }
+    
     function emailVendorReturns(vendor) {
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
@@ -300,14 +307,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const body = encodeURIComponent(report);
     
         const emails = vendorContacts[vendor].email;
-        const primaryEmail = emails[0]; // First email as primary
-        const ccEmails = emails.slice(1).join(','); // Remaining emails as CC
+        const primaryEmail = emails[0]; // The first email is the primary recipient
+        const ccEmails = emails.slice(1).join(','); // Any additional emails are CC'd
     
-        // Construct the mailto link with a clear CC
+        // Display the emails being used
+        showDebugMessage(`Primary Email: ${primaryEmail}<br>CC Emails: ${ccEmails}`);
+    
+        // Construct the mailto link
         let mailtoLink = `mailto:${primaryEmail}?subject=${subject}&body=${body}`;
         if (ccEmails) {
             mailtoLink += `&cc=${ccEmails}`;
         }
+    
+        // Display the final mailto link
+        showDebugMessage(`Mailto Link: ${mailtoLink}`);
     
         window.open(mailtoLink);
     }
