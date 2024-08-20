@@ -577,17 +577,20 @@
 
         function smsVendorReturns(vendor) {
             stopScanning(); // Stop the scanner before sending the SMS
-
+        
             const items = Array.from(vendorSections[vendor].list.children)
                 .map(li => li.querySelector('.return-item-content').innerHTML.trim().replace(/<br>/g, '\n'));
-
+        
             const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-
+        
             const smsNumbers = vendorContacts[vendor]?.sms || '';
-            const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers.join(',') : smsNumbers;
-
-            window.location.href = `sms:${smsNumberList}?body=${encodeURIComponent(report)}`;
-
+            const smsNumberList = Array.isArray(smsNumbers) ? smsNumbers : [smsNumbers];
+        
+            // Loop through each SMS number and open the SMS client
+            smsNumberList.forEach(number => {
+                window.open(`sms:${number}?body=${encodeURIComponent(report)}`);
+            });
+        
             startScanning(); // Restart the scanner after the SMS is sent
         }
 
