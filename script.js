@@ -36,11 +36,6 @@ document.addEventListener('DOMContentLoaded', function () {
         'Mygrant': { email: ['poliver@mygrantglass.com', 'cgoines@mygrantglass.com'], sms: '7045176639' }
     };
 
-    // Testing trigger for Mygrant
-    document.getElementById('testMygrantButton').addEventListener('click', function() {
-        emailVendorReturns('Mygrant');
-    });
-
     returnPartsButton.addEventListener('click', () => switchScreen('returnParts'));
     auditPartsButton.addEventListener('click', () => switchScreen('auditParts'));
     emailReportButton.addEventListener('click', sendEmailReport);
@@ -295,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const body = encodeURIComponent(report);
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
-
+    
     function emailVendorReturns(vendor) {
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
@@ -304,11 +299,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const subject = encodeURIComponent(`${vendor} Returns Report`);
         const body = encodeURIComponent(report);
     
-        // Combine all emails into a single string, separated by commas
-        const emails = vendorContacts[vendor].email.join(',');
+        const emails = vendorContacts[vendor].email;
+        const primaryEmail = emails[0]; // First email as primary
+        const ccEmails = emails.slice(1).join(','); // Remaining emails as CC
     
-        // Construct the mailto link
-        const mailtoLink = `mailto:${emails}?subject=${subject}&body=${body}`;
+        // Construct the mailto link with a clear CC
+        let mailtoLink = `mailto:${primaryEmail}?subject=${subject}&body=${body}`;
+        if (ccEmails) {
+            mailtoLink += `&cc=${ccEmails}`;
+        }
     
         window.open(mailtoLink);
     }
