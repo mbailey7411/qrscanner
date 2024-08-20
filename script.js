@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const vendorContacts = {
         'PGW': { email: 'RGrier@pgwautoglass.com', sms: '8645057843' },
         'Pilkington': { email: ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], sms: ['8643039699', '8642010487'] },
-        'Mygrant': { email: 'poliver@mygrantglass.com', sms: '7045176639' }
+        'Mygrant': { email: ['poliver@mygrantglass.com', 'cgoines@mygrantglass.com'], sms: '7045176639' }
     };
 
     returnPartsButton.addEventListener('click', () => switchScreen('returnParts'));
