@@ -569,9 +569,6 @@
                 email = email[0];
             }
 
-            // Display the debugging messages
-            showDebugMessage(`Primary Email: ${email}<br>CC Emails: ${ccEmail}`);
-
             // Open the email client
             window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
 
