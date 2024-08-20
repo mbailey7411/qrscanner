@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const scannedItems = new Set();
     let audioContext;
+
+alert('Test alert to check if alerts are working');
+    
     const vendorSections = {
         'PGW': { section: document.getElementById('pgwSection'), list: document.getElementById('pgwList') },
         'Pilkington': { section: document.getElementById('pilkingtonSection'), list: document.getElementById('pilkingtonList') },
@@ -292,6 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function emailVendorReturns(vendor) {
+        alert('emailVendorReturns function triggered for: ' + vendor);
         alert('Vendor: ' + vendor);
         alert('Emails: ' + vendorContacts[vendor].email.join(','));
     
