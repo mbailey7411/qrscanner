@@ -304,10 +304,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const subject = encodeURIComponent(`${vendor} Returns Report`);
         const body = encodeURIComponent(report);
     
-        const emails = Array.isArray(vendorContacts[vendor].email) ? vendorContacts[vendor].email.join(',') : vendorContacts[vendor].email;
-        alert('mailto link: mailto:' + emails + '?subject=' + subject + '&body=' + body); // Debugging alert
+        const emails = vendorContacts[vendor].email;
+        const primaryEmail = emails[0]; // The first email will be the primary one
+        const ccEmails = emails.slice(1).join(','); // All subsequent emails will be CC'd
     
-        window.open(`mailto:${emails}?subject=${subject}&body=${body}`);
+        // Construct the mailto link with CC if there are multiple emails
+        let mailtoLink = `mailto:${primaryEmail}?subject=${subject}&body=${body}`;
+        if (ccEmails) {
+            mailtoLink += `&cc=${ccEmails}`;
+        }
+    
+        window.open(mailtoLink);
     }
 
     function smsVendorReturns(vendor) {
