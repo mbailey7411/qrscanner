@@ -298,31 +298,29 @@ document.addEventListener('DOMContentLoaded', function () {
         debugNotification.style.display = 'block';
     }
     
-    function emailVendorReturns(vendor) {
+     function emailVendorReturns(vendor) {
+        stopScanning(); // Stop the scanner before sending the email
+    
         const items = Array.from(vendorSections[vendor].list.children)
-            .map(li => li.querySelector('.item-content').textContent);
+            .map(li => li.querySelector('.return-item-content').innerHTML.trim().replace(/<br>/g, '\n'));
     
-        const report = `${vendor} Returns:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
-        const subject = encodeURIComponent(`${vendor} Returns Report`);
+        const report = `These items are labeled and ready to be picked up in our return area:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
+    
+        const subject = encodeURIComponent(`${vendor} Returns`);
         const body = encodeURIComponent(report);
+        let email = vendorContacts[vendor]?.email || '';
+        let ccEmail = '';
     
-        const emails = vendorContacts[vendor].email;
-        const primaryEmail = emails[0]; // The first email is the primary recipient
-        const ccEmails = emails.slice(1).join(','); // Any additional emails are CC'd
-    
-        // Display the emails being used
-        showDebugMessage(`Primary Email: ${primaryEmail}<br>CC Emails: ${ccEmails}`);
-    
-        // Construct the mailto link
-        let mailtoLink = `mailto:${primaryEmail}?subject=${subject}&body=${body}`;
-        if (ccEmails) {
-            mailtoLink += `&cc=${ccEmails}`;
+        // Handle multiple emails (primary and CC)
+        if (Array.isArray(email)) {
+            ccEmail = `&cc=${encodeURIComponent(email[1])}`;
+            email = email[0];
         }
     
-        // Display the final mailto link
-        showDebugMessage(`Mailto Link: ${mailtoLink}`);
+        // Construct and open the mailto link
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}${ccEmail}`;
     
-        window.open(mailtoLink);
+        startScanning(); // Restart the scanner after the email is sent
     }
 
     function smsVendorReturns(vendor) {
