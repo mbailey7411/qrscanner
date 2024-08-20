@@ -291,13 +291,6 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
     
-    function showDebugMessage(message) {
-        const debugNotification = document.getElementById('debugNotification');
-        const debugMessage = document.getElementById('debugMessage');
-        debugMessage.innerHTML = message;
-        debugNotification.style.display = 'block';
-    }
-    
      function emailVendorReturns(vendor) {
         stopScanning(); // Stop the scanner before sending the email
     
