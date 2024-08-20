@@ -24,20 +24,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const scannedItems = new Set();
     let audioContext;
-
-alert('Test alert to check if alerts are working');
-    
     const vendorSections = {
         'PGW': { section: document.getElementById('pgwSection'), list: document.getElementById('pgwList') },
         'Pilkington': { section: document.getElementById('pilkingtonSection'), list: document.getElementById('pilkingtonList') },
         'Mygrant': { section: document.getElementById('mygrantSection'), list: document.getElementById('mygrantList') }
     };
-    
+
     const vendorContacts = {
         'PGW': { email: ['RGrier@pgwautoglass.com'], sms: '8645057843' },
         'Pilkington': { email: ['marco.yeargin@nsg.com', 'Caleb.ford@nsg.com'], sms: ['8643039699', '8642010487'] },
         'Mygrant': { email: ['poliver@mygrantglass.com', 'cgoines@mygrantglass.com'], sms: '7045176639' }
     };
+
+    // Testing trigger for Mygrant
+    document.getElementById('testMygrantButton').addEventListener('click', function() {
+        emailVendorReturns('Mygrant');
+    });
 
     returnPartsButton.addEventListener('click', () => switchScreen('returnParts'));
     auditPartsButton.addEventListener('click', () => switchScreen('auditParts'));
@@ -295,23 +297,19 @@ alert('Test alert to check if alerts are working');
     }
 
     function emailVendorReturns(vendor) {
-        alert('emailVendorReturns function triggered for: ' + vendor);
-        alert('Vendor: ' + vendor);
-        alert('Emails: ' + vendorContacts[vendor].email.join(','));
-    
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
-        
+    
         const report = `${vendor} Returns:\n\n${items.join('\n\n')}\n\n20/20 Auto Glass`;
         const subject = encodeURIComponent(`${vendor} Returns Report`);
         const body = encodeURIComponent(report);
-        
-        const emails = vendorContacts[vendor].email.join(',');
-        alert('Final mailto link: mailto:' + emails + '?subject=' + subject + '&body=' + body);
-        
+    
+        const emails = Array.isArray(vendorContacts[vendor].email) ? vendorContacts[vendor].email.join(',') : vendorContacts[vendor].email;
+        alert('mailto link: mailto:' + emails + '?subject=' + subject + '&body=' + body); // Debugging alert
+    
         window.open(`mailto:${emails}?subject=${subject}&body=${body}`);
     }
-    
+
     function smsVendorReturns(vendor) {
         const items = Array.from(vendorSections[vendor].list.children)
             .map(li => li.querySelector('.item-content').textContent);
@@ -362,7 +360,6 @@ alert('Test alert to check if alerts are working');
     }
 
     function maintainLayoutConsistency() {
-        // Force camera and button alignment
         const qrReader = document.getElementById('qr-reader');
         const qrReaderAudit = document.getElementById('qr-reader-audit');
 
